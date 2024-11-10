@@ -3,7 +3,11 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <SimpleCLI.h>
+#include <HttpsOTAUpdate.h>
 #include <nvs_flash.h>
+
+#define MAJORVER  0
+#define MINORVER  2
 
 HardwareSerial fdcSerial(2);
 
@@ -85,8 +89,14 @@ Command cmdDump;
 Command cmdWifi;
 Command cmdSSID;
 Command cmdPass;
+Command cmdReboot;
+Command cmdUpdate;
+Command cmdVersion;
+Command cmdType;
+Command cmdExec;
 
 bool confChanged = false;
+bool sdReady = false;
 
 void flushrx(void) {
   while (fdcSerial.available()) {
@@ -147,6 +157,8 @@ void sdSetup() {
     return;
   }
 
+  sdReady = true;
+
   uint16_t sectorSize = SD.sectorSize();
   uint16_t bytesRead;
   uint32_t sector = 0;
@@ -177,7 +189,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  Serial.printf("\r\nESP32 FDC+ Serial Server 0.1\r\n");
+  Serial.printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n", MAJORVER, MINORVER);
 
   // Built-in LED for Head Load
   pinMode(LED_BUILTIN, OUTPUT);

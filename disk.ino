@@ -1,5 +1,5 @@
 void diskSetup() {
-  listDir(SD, "/", 0);  
+  listDir(SD, "/", 0);
 }
 
 int diskTracks(const char *filename) {

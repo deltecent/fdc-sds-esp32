@@ -9,12 +9,17 @@ void cliSetup() {
   cmdMount = cli.addBoundlessCommand("m/ount", mountCallback);
   cmdUnmount = cli.addBoundlessCommand("u/nmount", unmountCallback);
   cmdStats = cli.addCommand("s/tat/s", statsCallback);
-  cmdSave = cli.addCommand("save,write", saveCallback);
+  cmdSave = cli.addCommand("save,w/rite", saveCallback);
   cmdErase = cli.addCommand("erase", eraseCallback);
   cmdDump = cli.addCommand("du/mp", dumpCallback);
-  cmdWifi = cli.addBoundlessCommand("w/ifi", wifiCallback);
+  cmdWifi = cli.addBoundlessCommand("wifi", wifiCallback);
   cmdSSID = cli.addBoundlessCommand("ssid", ssidCallback);
   cmdPass = cli.addBoundlessCommand("pass", passCallback);
+  cmdReboot = cli.addCommand("reboot", rebootCallback);
+  cmdUpdate = cli.addCommand("update", updateCallback);
+  cmdVersion = cli.addCommand("v/ersion", versionCallback);
+  cmdType = cli.addBoundlessCommand("t/ype,cat", typeCallback);
+  cmdExec = cli.addBoundlessCommand("e/xec,run", execCallback);
 
   dispPrompt();
 }
@@ -68,10 +73,92 @@ void helpCallback(cmd* c) {
   Serial.printf("DIR                       Directory\r\n");
   Serial.printf("DUMP                      Dump track buffer\r\n");
   Serial.printf("ERASE                     Erase configuration\r\n");
+  Serial.printf("EXEC filename             Execute filename\r\n");
   Serial.printf("MOUNT [drive filename]    Mount drive\r\n");
+  Serial.printf("PASS pass                 Set WiFi password\r\n");
+  Serial.printf("REBOOT                    Reboot device\r\n");
   Serial.printf("SAVE                      Save configuration\r\n");
+  Serial.printf("SSID ssid                 Set WiFi SSID\r\n");
   Serial.printf("STATS                     Statistics\r\n");
+  Serial.printf("TYPE filename             Display file\r\n");
   Serial.printf("UNMOUNT drive             Unmount drive\r\n");
+  Serial.printf("UPDATE                    Update firmware\r\n");
+  Serial.printf("VERSION                   Dispay version\r\n");
+  Serial.printf("WIFI ON | OFF             Turn WiFi On and Off\r\n");
+}
+
+void versionCallback(cmd * c) {
+  Serial.printf("%d.%d\r\n", MAJORVER, MINORVER);
+}
+
+void rebootCallback(cmd* c) {
+  Serial.printf("Rebooting...\r\n");
+  delay(1000);
+  ESP.restart();
+}
+
+void updateCallback(cmd* c) {
+  Serial.printf("Not implemented\r\n");
+}
+
+void typeCallback(cmd* c) {
+  Command cmd(c);
+  char ch;
+
+  int argNum = cmd.countArgs(); // Get number of arguments
+
+  if (!argNum) {
+    Serial.printf("type filename\r\n");
+    return;
+  }
+
+  Argument filenameArg = cmd.getArg(0);
+  String filename = "/" + filenameArg.getValue();
+
+  File f = SD.open(filename);
+
+  if (!f) {
+    Serial.printf("Could not open file\r\n");
+    return;
+  }
+
+  while(f.available()) {
+    String s = f.readStringUntil('\n');
+    Serial.print(s + "\r\n");
+  }
+
+  f.close();
+}
+
+void execCallback(cmd* c) {
+  Command cmd(c);
+  char ch;
+
+  int argNum = cmd.countArgs(); // Get number of arguments
+
+  if (!argNum) {
+    Serial.printf("type filename\r\n");
+    return;
+  }
+
+  Argument filenameArg = cmd.getArg(0);
+  String filename = "/" + filenameArg.getValue();
+
+  File f = SD.open(filename);
+
+  if (!f) {
+    f = SD.open(filename + ".bat");
+    if (!f) {
+      Serial.printf("Could not open file\r\n");
+      return;
+    }
+  }
+
+  while(f.available()) {
+    cli.parse(f.readStringUntil('\n'));
+  }
+
+  f.close();
 }
 
 void baudCallback(cmd* c) {
