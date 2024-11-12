@@ -31,11 +31,28 @@ void wifiSetup() {
   Serial.print(WiFi.localIP());
 
   Serial.print("\r\n");
+
+  // Start telnet console
+  TelnetStream.begin();
+  TelnetStream.onConnect(telnetConnected);
+  TelnetStream.onDisconnect(telnetDisconnected);
 }
 
 void wifiDisconnect() {
-
   WiFi.disconnect();
 
-  Serial.printf("WiFi disconnected from '%s'.\r\n", wifiSSID);
+  cliConsole->printf("WiFi disconnected from '%s'.\r\n", wifiSSID);
+}
+
+void telnetConnected(String ip) {
+  cliConsole = &TelnetStream;
+  cliConsole->printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n\r\n", MAJORVER, MINORVER);
+  dispPrompt();
+
+  Serial.printf("\r\nTelnet: %s connected.\r\n", ip.c_str());
+
+}
+
+void telnetDisconnected(String ip) {
+  Serial.printf("\r\nTelnet: %s disconnected.\r\n", ip.c_str());
 }

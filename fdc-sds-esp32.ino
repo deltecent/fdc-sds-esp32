@@ -2,14 +2,17 @@
 #include <FS.h>
 #include <SD.h>
 #include <WiFi.h>
+//#include <TelnetStream.h>
+#include <ESPTelnetStream.h>
 #include <SimpleCLI.h>
 #include <HttpsOTAUpdate.h>
 #include <nvs_flash.h>
 
 #define MAJORVER  0
-#define MINORVER  2
+#define MINORVER  3
 
 HardwareSerial fdcSerial(2);
+ESPTelnetStream TelnetStream;
 
 Preferences fdcPrefs;
 
@@ -75,6 +78,7 @@ SimpleCLI cli;
 char cliPrompt[10];
 char cliBuf[80] = {0};
 int cliIdx = 0;
+Stream *cliConsole = &Serial;
 
 // Commands
 Command cmdHelp;
@@ -94,6 +98,10 @@ Command cmdUpdate;
 Command cmdVersion;
 Command cmdType;
 Command cmdExec;
+Command cmdLogout;
+Command cmdDelete;
+Command cmdRename;
+Command cmdClear;
 
 bool confChanged = false;
 bool sdReady = false;
@@ -189,6 +197,8 @@ void setup() {
 
   Serial.begin(115200);
 
+  delay(500);
+
   Serial.printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n", MAJORVER, MINORVER);
 
   // Built-in LED for Head Load
@@ -204,7 +214,7 @@ void setup() {
 
   fdcSetup();
 
-  cliSetup();
+  cliSetup(&Serial);
 }
 
 void loop() {
@@ -212,6 +222,11 @@ void loop() {
 
   //digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 
-  cliInput();
+  TelnetStream.loop();
+  if (TelnetStream.isConnected()) {
+    cliInput(&TelnetStream, false);
+  }
+  cliInput(&Serial, true);
+
   fdcProc();
 }

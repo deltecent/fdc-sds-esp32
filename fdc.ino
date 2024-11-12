@@ -144,7 +144,7 @@ void fdcBaudrate() {
 
     default:
       baudRate = DEFAULT_BAUD;
-      Serial.printf("Invalid baud rate. Resetting FDC+ to default baud rate %d\r\n", baudRate);
+      cliConsole->printf("Invalid baud rate. Resetting FDC+ to default baud rate %d\r\n", baudRate);
       break;
   }
 
@@ -196,7 +196,7 @@ int procSTAT(crblk_t *cmd) {
   cmd->word2[MSB] = 0x00;
 
   for (int d=0; d<MAX_DRIVE; d++) {
-    digitalWrite (dSelLED[d], LOW);
+    digitalWrite(dSelLED[d], LOW);
 
     if (d < 8) {
       cmd->word2[LSB] |= ((drive[d].mounted) ? 1 << d : 0);
@@ -207,7 +207,7 @@ int procSTAT(crblk_t *cmd) {
 
   // Set drive select and head load LED
   if ((cmd->word1[LSB] < MAX_DRIVE) && cmd->word1[MSB]) {
-    digitalWrite (dSelLED[cmd->word1[LSB]], HIGH);
+    digitalWrite(dSelLED[cmd->word1[LSB]], HIGH);
   }
 
   sprintf(lastStat, "%d %02X %02X %02X %02X", statCnt, cmd->word1[LSB], cmd->word1[MSB], cmd->word2[LSB], cmd->word2[MSB]);
@@ -228,22 +228,22 @@ bool procREAD(crblk_t *cmd) {
   sprintf(lastRead, "D:%02d T:%04d L:%d", d, track, len);
 
   if (d >= MAX_DRIVE) {
-    Serial.printf("Drive %d: Invalid drive number\r\n", d);
+    cliConsole->printf("Drive %d: Invalid drive number\r\n", d);
     return false;
   }
 
   if (track >= drive[d].tracks) {
-    Serial.printf("Drive %d: invalid track %d\r\n", d, track);
+    cliConsole->printf("Drive %d: invalid track %d\r\n", d, track);
     return false;
   }
   
   if (len > TRACKSIZE) {
-    Serial.printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
+    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
     return false;
   }
 
   if (!drive[d].mounted) {
-    Serial.printf("Drive %d: not mounted\r\n", d);
+    cliConsole->printf("Drive %d: not mounted\r\n", d);
     return false;
   }
 
@@ -252,7 +252,7 @@ bool procREAD(crblk_t *cmd) {
     diskImg=SD.open(drive[d].filename);
 
     if (!diskImg) {
-      Serial.printf("Drive %d: could not open '%s'\r\n", d, "filename");
+      cliConsole->printf("Drive %d: could not open '%s'\r\n", d, "filename");
       return false;
     }
 
@@ -263,7 +263,7 @@ bool procREAD(crblk_t *cmd) {
     diskImg.close();
     
     if (bytesRead != len) {
-      Serial.printf("Drive %d: Could not read %d bytes\r\n", d, len);
+      cliConsole->printf("Drive %d: Could not read %d bytes\r\n", d, len);
       return false;
     }
 
@@ -288,17 +288,17 @@ bool procWRIT(crblk_t *cmd) {
   sprintf(lastWrit, "D:%02d T:%04d L:%d", d, track, len);
 
   if (d >= MAX_DRIVE) {
-    Serial.printf("Drive %d: Invalid drive number\r\n", d);
+    cliConsole->printf("Drive %d: Invalid drive number\r\n", d);
     return false;
   }
 
   if (track >= drive[d].tracks) {
-    Serial.printf("Drive %d: invalid track %d\r\n", d, track);
+    cliConsole->printf("Drive %d: invalid track %d\r\n", d, track);
     return false;
   }
   
   if (len > TRACKSIZE) {
-    Serial.printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
+    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
     return false;
   }
 
@@ -309,7 +309,7 @@ bool procWRIT(crblk_t *cmd) {
   cmd->word1[MSB] = 0x00;
 
   if (!diskImg) {
-    Serial.printf("Drive %d: could not open '%s'\r\n", d, drive[d].filename);
+    cliConsole->printf("Drive %d: could not open '%s'\r\n", d, drive[d].filename);
     // Send WRIT response
     cmd->word1[LSB] = RESP_NOT_READY;
 
@@ -441,9 +441,9 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
 void dumpBuffer(byte *buffer, int len) {
   for (int i=0; i<len; i++) {
     if (i % 16 == 0) {
-      Serial.printf("\r\n%04X: ", i);
+      cliConsole->printf("\r\n%04X: ", i);
     }
-    Serial.printf("%02X ", buffer[i]);
+    cliConsole->printf("%02X ", buffer[i]);
   }
-  Serial.println("");
+  cliConsole->println("");
 }
