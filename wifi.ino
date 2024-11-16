@@ -17,10 +17,12 @@ void wifiSetup() {
   Serial.printf("WiFi connecting to '%s' ..", wifiSSID);
 
   int timeout = 0;
+  int status;
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while ((status = WiFi.status()) != WL_CONNECTED) {
     Serial.print(".");
-    delay(250);
+
+    delay(500);
     if (timeout++ > 40) {
       Serial.printf(" NOT CONNECTED\r\n");
       return;
@@ -36,12 +38,18 @@ void wifiSetup() {
   TelnetStream.begin();
   TelnetStream.onConnect(telnetConnected);
   TelnetStream.onDisconnect(telnetDisconnected);
+
+  // Start FTP server
+  ftpSrv.begin("fdc","fdc");    //username, password for ftp.
 }
 
 void wifiDisconnect() {
+  ftpSrv.end();
+  TelnetStream.stop();
+
   WiFi.disconnect();
 
-  cliConsole->printf("WiFi disconnected from '%s'.\r\n", wifiSSID);
+  Serial.printf("WiFi disconnected from '%s'.\r\n", wifiSSID);
 }
 
 void telnetConnected(String ip) {
@@ -50,7 +58,6 @@ void telnetConnected(String ip) {
   dispPrompt();
 
   Serial.printf("\r\nTelnet: %s connected.\r\n", ip.c_str());
-
 }
 
 void telnetDisconnected(String ip) {

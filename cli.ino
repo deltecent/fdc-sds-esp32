@@ -13,20 +13,20 @@ void cliSetup(Stream* defaultConsole) {
   cmdStats = cli.addCommand("s/tat/s", statsCallback);
   cmdSave = cli.addCommand("save,w/rite", saveCallback);
   cmdErase = cli.addCommand("erase", eraseCallback);
-  cmdDump = cli.addCommand("du/mp", dumpCallback);
+  cmdDump = cli.addCommand("d/u/mp", dumpCallback);
   cmdWifi = cli.addBoundlessCommand("wifi", wifiCallback);
   cmdSSID = cli.addBoundlessCommand("ssid", ssidCallback);
   cmdPass = cli.addBoundlessCommand("pass", passCallback);
   cmdReboot = cli.addCommand("reboot", rebootCallback);
   cmdUpdate = cli.addCommand("update", updateCallback);
-  cmdVersion = cli.addCommand("v/ersion", versionCallback);
+  cmdVersion = cli.addCommand("v/er/sion", versionCallback);
   cmdType = cli.addBoundlessCommand("t/ype,cat", typeCallback);
   cmdExec = cli.addBoundlessCommand("e/xec,run", execCallback);
   cmdLogout = cli.addCommand("logout,exit", logoutCallback);
   cmdDelete = cli.addBoundlessCommand("del/ete,rm", deleteCallback);
   cmdRename = cli.addBoundlessCommand("ren/ame,mv", renameCallback);
   cmdClear = cli.addCommand("clear", clearCallback);
-
+  
   dispPrompt();
 }
 
@@ -44,7 +44,7 @@ void cliInput(Stream* console, bool echo) {
 
   cliConsole = console;
 
-  while (cliConsole->available()) {
+  while (cliConsole->available() > 0) {
     c = cliConsole->read();
 
     switch (c) {
@@ -221,15 +221,18 @@ void baudCallback(cmd* c) {
   int argNum = cmd.countArgs();  // Get number of arguments
 
   if (argNum != 1) {
-    cliConsole->printf("baud [9600, 19200, 38400, 57600, 76800, 230400, 403200, 460800]\r\n");
+    cliConsole->printf("baud [9600, 19200, 38400, 57600, 76800, 230400, 403200, 460800 ]\r\n");
     return;
   }
 
   Argument driveArg = cmd.getArg(0);
   String driveValue = driveArg.getValue();
-  baudRate = driveValue.toInt();
 
-  fdcBaudrate();
+  if (baudRate != driveValue.toInt()) {
+    baudRate = driveValue.toInt();
+    confChanged = true;
+    fdcBaudrate();
+  }
 }
 
 // Callback function for dir command
@@ -294,7 +297,7 @@ void mountCallback(cmd* c) {
     for (int d = 0; d < MAX_DRIVE; d++) {
       cliConsole->printf("Drive %d: ", d);
       if (drive[d].mounted) {
-        cliConsole->printf("%-25.25s (%d Tracks)\r\n", drive[d].filename, drive[d].tracks);
+        cliConsole->printf("%-25.25s (%d Tracks)\r\n", drive[d].filename+1, drive[d].tracks);
       } else {
         cliConsole->printf("[ NOT MOUNTED ]\r\n");
       }

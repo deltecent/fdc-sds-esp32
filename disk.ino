@@ -1,5 +1,5 @@
 void diskSetup() {
-  listDir(SD, "/", 0);
+//  listDir(SD, "/", 0);
 }
 
 int diskTracks(const char *filename) {
@@ -33,7 +33,10 @@ void mountDrive(int driveno, const char *filename) {
     strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
     drive[driveno].tracks = diskTracks(filename);
 
-    cliConsole->printf("Drive %d: mounted as '%s' with %d tracks.\r\n", driveno, filename, drive[driveno].tracks);
+    cliConsole->printf("Drive %d: mounted as '%s' with %d tracks.\r\n", driveno, filename+1, drive[driveno].tracks);
+
+    lastDrive = -1;
+    lastTrack = -1;
 
     confChanged = true;
   }
@@ -48,6 +51,9 @@ void unmountDrive(int driveno) {
       drive[driveno].mounted = 0;
       drive[driveno].filename[0]= 0;
       cliConsole->printf("Drive %d: unmounted\r\n", driveno);
+
+      lastDrive = -1;
+      lastTrack = -1;
 
       confChanged = true;
     }

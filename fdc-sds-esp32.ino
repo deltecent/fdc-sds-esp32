@@ -5,11 +5,11 @@
 //#include <TelnetStream.h>
 #include <ESPTelnetStream.h>
 #include <SimpleCLI.h>
-#include <HttpsOTAUpdate.h>
+#include "SimpleFTPServer.h"
 #include <nvs_flash.h>
 
 #define MAJORVER  0
-#define MINORVER  3
+#define MINORVER  4
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream TelnetStream;
@@ -106,6 +106,8 @@ Command cmdClear;
 bool confChanged = false;
 bool sdReady = false;
 
+FtpServer ftpSrv;
+
 void flushrx(void) {
   while (fdcSerial.available()) {
     fdcSerial.read();
@@ -188,13 +190,10 @@ void sdSetup() {
   }
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.printf("SD Card Size: %lluMB\r\n", cardSize);
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  //pinMode(LED_BUILTIN, OUTPUT);
-
   Serial.begin(115200);
 
   delay(500);
@@ -218,15 +217,16 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  //digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-
-  TelnetStream.loop();
-  if (TelnetStream.isConnected()) {
-    cliInput(&TelnetStream, false);
-  }
   cliInput(&Serial, true);
+
+  if (WiFi.status() == WL_CONNECTED) {
+    TelnetStream.loop();
+    if (TelnetStream.isConnected()) {
+      cliInput(&TelnetStream, false);
+    }
+
+    ftpSrv.handleFTP();
+  }
 
   fdcProc();
 }
