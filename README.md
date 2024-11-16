@@ -15,7 +15,11 @@ The FDC+ includes a built-in, high speed serial port that can connect to a PC ru
 
 ## ESP32 FDC+ Serial Disk Server
 
-The ESP32 FDC+ Serial Disk Server ("ESP32-SDS) provides an alternative to the Windows-based server.
+The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the Windows-based server.
+
+## Compiling the Firmware
+
+[Arduino IDE](https://www.arduino.cc/en/software)
 
 ## Building the FDC+ Serial Disk Server with Separate Components
 
