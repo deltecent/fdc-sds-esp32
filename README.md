@@ -17,10 +17,6 @@ The FDC+ includes a built-in, high speed serial port that can connect to a PC ru
 
 The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the Windows-based server.
 
-## Compiling the Firmware
-
-[Arduino IDE](https://www.arduino.cc/en/software)
-
 ## Building the FDC+ Serial Disk Server with Separate Components
 
 While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be built using parts from Amazon.
@@ -29,7 +25,44 @@ While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be bui
 [ESP32 Breakout Board](https://www.amazon.com/dp/B0BNQ85GF3)
 [Adafruit MicroSD Card Breakout Board+](https://www.amazon.com/dp/B00NAY2NAI)
 [2PCS MAX3232 3.3V to 5V DB9 Male RS232 Serial Prot to TTL Converter Module](https://www.amazon.com/dp/B07LBDZ9WG)
-[Ableconn PI232DB9M Compact GPIO TX/RX to DB9M RS232 Serial Expansion Board](https://www.amazon.com/dp/B00WPBXDJC)
+[Ableconn PI232DB9M Compact GPIO TX/RX to DB9M RS232 Serial Expansion Board](https://www.amazon.com/dp/B00WPBXDJC) (Note 1)
 [SanDisk 32GB Ultra microSDHC UHS-I Memory Card](https://www.amazon.com/dp/B073JWXGNT)
 [2PCS Micro SD Card Module TF Card Memory Storage Adapter Reader Board](https://www.amazon.com/dp/B08C4WY2WR)
 [RGB LED Module for ESP32](https://www.amazon.com/dp/B0BXKMGSG6)
+
+Note 1. This serial expansion board has a maximum baud rate of 230.4K.
+
+## ESP32 Pinouts
+
+FDC+ RS232 (VCC or 3.3V as required)
+
+RX2 - RXD
+TX2 - TXD
+
+SD Card (VCC or 3.3V as required)
+
+D5  - CS
+D18 - CLK
+D19 - MISO
+D23 - MOSI
+
+Head Load LEDs
+
+D13 - Drive 0
+D12 - Drive 1
+D14 - Drive 2
+D27 - Drive 3
+
+## Compiling the Firmware
+
+Install the [Arduino IDE](https://www.arduino.cc/en/software).
+
+In the Board Manager, install "esp32 by Espressif Systems" and select the "DOIT ESP32 DEVKIT 1" board.
+
+Install the following libraries:
+
+* ESP Telnet
+* SimpleCLI
+
+Compile and upload the Firmware.
+
