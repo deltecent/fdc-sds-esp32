@@ -32,7 +32,9 @@ While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be bui
 
 Note 1. This serial expansion board has a maximum baud rate of 230.4K.
 
-## ESP32 Pinouts
+## ESP32 DEV KIT 1 Pinout
+
+![ESP32 DEV KIT 1 PINOUT](https://mischianti.org/wp-content/uploads/2020/11/ESP32-DOIT-DEV-KIT-v1-pinout-mischianti.png)
 
 FDC+ RS232 (VCC or 3.3V as required)
 
