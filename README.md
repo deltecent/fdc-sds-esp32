@@ -36,6 +36,7 @@ Note 1. This serial expansion board has a maximum baud rate of 230.4K.
 
 ![ESP32 DEV KIT 1 PINOUT](https://mischianti.org/wp-content/uploads/2020/11/ESP32-DOIT-DEV-KIT-v1-pinout-mischianti.png)
 
+```
 FDC+ RS232 (VCC or 3.3V as required)
 
 RX2 - RXD
@@ -54,6 +55,7 @@ D13 - Drive 0
 D12 - Drive 1
 D14 - Drive 2
 D27 - Drive 3
+```
 
 ## Compiling the Firmware
 
