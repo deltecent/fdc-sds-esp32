@@ -21,14 +21,14 @@ The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the W
 
 While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be built using parts from Amazon.
 
-[ESP-WROOM-32 Development Board](https://www.amazon.com/dp/B07WCG1PLV)
-[ESP32 Breakout Board](https://www.amazon.com/dp/B0BNQ85GF3)
-[Adafruit MicroSD Card Breakout Board+](https://www.amazon.com/dp/B00NAY2NAI)
-[2PCS MAX3232 3.3V to 5V DB9 Male RS232 Serial Prot to TTL Converter Module](https://www.amazon.com/dp/B07LBDZ9WG)
-[Ableconn PI232DB9M Compact GPIO TX/RX to DB9M RS232 Serial Expansion Board](https://www.amazon.com/dp/B00WPBXDJC) (Note 1)
-[SanDisk 32GB Ultra microSDHC UHS-I Memory Card](https://www.amazon.com/dp/B073JWXGNT)
-[2PCS Micro SD Card Module TF Card Memory Storage Adapter Reader Board](https://www.amazon.com/dp/B08C4WY2WR)
-[RGB LED Module for ESP32](https://www.amazon.com/dp/B0BXKMGSG6)
+[ESP-WROOM-32 Development Board](https://www.amazon.com/dp/B07WCG1PLV)  
+[ESP32 Breakout Board](https://www.amazon.com/dp/B0BNQ85GF3)  
+[Adafruit MicroSD Card Breakout Board+](https://www.amazon.com/dp/B00NAY2NAI)  
+[2PCS MAX3232 3.3V to 5V DB9 Male RS232 Serial Prot to TTL Converter Module](https://www.amazon.com/dp/B07LBDZ9WG)  
+[Ableconn PI232DB9M Compact GPIO TX/RX to DB9M RS232 Serial Expansion Board](https://www.amazon.com/dp/B00WPBXDJC) (Note 1)  
+[SanDisk 32GB Ultra microSDHC UHS-I Memory Card](https://www.amazon.com/dp/B073JWXGNT)  
+[2PCS Micro SD Card Module TF Card Memory Storage Adapter Reader Board](https://www.amazon.com/dp/B08C4WY2WR)  
+[RGB LED Module for ESP32](https://www.amazon.com/dp/B0BXKMGSG6)  
 
 Note 1. This serial expansion board has a maximum baud rate of 230.4K.
 
