@@ -2,6 +2,7 @@
 void wifiSetup() {
 
   if (!wifiEnabled) {
+    WiFi.disconnect(true);
     return;
   }
 
@@ -25,6 +26,7 @@ void wifiSetup() {
     delay(500);
     if (timeout++ > 40) {
       Serial.printf(" NOT CONNECTED\r\n");
+      WiFi.disconnect();
       return;
     }
   }
@@ -47,9 +49,12 @@ void wifiDisconnect() {
   ftpSrv.end();
   TelnetStream.stop();
 
-  WiFi.disconnect();
+  if (WiFi.isConnected()) {
+    Serial.printf("WiFi disconnecting from '%s'.\r\n", wifiSSID);
+  }
 
-  Serial.printf("WiFi disconnected from '%s'.\r\n", wifiSSID);
+  // Disconnect and turn off radio
+  WiFi.disconnect(true);
 }
 
 void telnetConnected(String ip) {

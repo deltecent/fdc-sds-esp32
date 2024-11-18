@@ -8,8 +8,12 @@
 #include "SimpleFTPServer.h"
 #include <nvs_flash.h>
 
+#if !defined ( ESP32 )
+	#error This code is intended to run on the ESP32 platform! Please check your Tools->Board setting.
+#endif
+
 #define MAJORVER  0
-#define MINORVER  4
+#define MINORVER  5
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream TelnetStream;
@@ -48,7 +52,7 @@ uint32_t statCnt = 0;
 uint32_t readCnt = 0;
 uint32_t writCnt = 0;
 uint32_t errsCnt = 0;
-uint32_t toutCnt = 0;
+volatile uint32_t toutCnt = 0;
 
 #define MAX_DRIVE  4
 
@@ -68,14 +72,14 @@ int dSelLED[MAX_DRIVE] = {13, 12, 14, 27};
 uint8_t trackBuf[TRACKSIZE];
 int lastTrack = -1;
 int lastDrive = -1;
-char lastStat[40];
-char lastRead[40];
-char lastWrit[40];
-char lastErr[80];
+char lastStat[40] = {0};
+char lastRead[40] = {0};
+char lastWrit[40] = {0};
+char lastErr[80] = {0};
 
 // Create CLI Object
 SimpleCLI cli;
-char cliPrompt[10];
+char cliPrompt[10] = {0};
 char cliBuf[80] = {0};
 int cliIdx = 0;
 Stream *cliConsole = &Serial;
@@ -108,10 +112,28 @@ bool sdReady = false;
 
 FtpServer ftpSrv;
 
-void flushrx(void) {
-  while (fdcSerial.available()) {
-    fdcSerial.read();
-    delay(10);
+// FDC+ timeout timer
+#define FDC_TIMEOUT_MS 5000
+
+hw_timer_t *fdcTimer = NULL;
+volatile bool fdcTimeout = false;
+
+void timerSetup() {
+    // Set timer frequency to 1Mhz
+  fdcTimer = timerBegin(1000000);
+
+    // Attach onTimer function to our timer.
+  timerAttachInterrupt(fdcTimer, &fdcTimerISR);
+
+  // Set alarm to call fdcTimerISR function every second (value in microseconds).
+  // Repeat the alarm (third parameter) with unlimited count = 0 (fourth parameter).
+  timerAlarm(fdcTimer, FDC_TIMEOUT_MS * 1000, true, 0);
+}
+
+void flushrx(Stream *s) {
+  while (s->available()) {
+    s->read();
+    delay(100);
   }
 }
 
@@ -163,7 +185,7 @@ void loadPrefs() {
 
 void sdSetup() {
   if (!SD.begin(5)) {
-    Serial.println("Could not initialize SD card");
+    Serial.print("Could not initialize SD card\r\n");
     return;
   }
 
@@ -198,9 +220,11 @@ void setup() {
 
   delay(500);
 
-  Serial.printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n", MAJORVER, MINORVER);
+  flushrx(&Serial);
 
-  // Built-in LED for Head Load
+  Serial.printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n\r\n", MAJORVER, MINORVER);
+
+  // FDC status LED
   pinMode(LED_BUILTIN, OUTPUT);
 
   sdSetup();
@@ -210,6 +234,8 @@ void setup() {
   loadPrefs();
 
   wifiSetup();
+
+  timerSetup();
 
   fdcSetup();
 

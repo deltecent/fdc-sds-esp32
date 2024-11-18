@@ -121,7 +121,7 @@ void helpCallback(cmd* c) {
   cliConsole->printf("RENAME old new            Rename file\r\n");
   cliConsole->printf("SAVE                      Save configuration\r\n");
   cliConsole->printf("SSID ssid                 Set WiFi SSID\r\n");
-  cliConsole->printf("STATS                     Statistics\r\n");
+  cliConsole->printf("STATS                     FDC+ Statistics\r\n");
   cliConsole->printf("TYPE filename             Display file\r\n");
   cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
   cliConsole->printf("UPDATE                    Update firmware\r\n");
@@ -390,6 +390,8 @@ void statsCallback(cmd* c) {
 
   cliConsole->printf("FDC+ Baud Rate: %d\r\n\n", baudRate);
 
+  cliConsole->printf("FDC+ Connection Status: %s\r\n\n", (fdcTimeout) ? "Not Connected" : "Connected");
+
   cliConsole->printf("STAT: %08d\r\n", statCnt);
   cliConsole->printf("READ: %08d\r\n", readCnt);
   cliConsole->printf("WRIT: %08d\r\n", writCnt);
@@ -473,6 +475,9 @@ void ssidCallback(cmd* c) {
   if (strcmp(wifiSSID, ssid.c_str())) {
     strncpy(wifiSSID, ssid.c_str(), sizeof(wifiSSID));
     confChanged = true;
+
+    wifiDisconnect();
+    wifiSetup();
   }
 }
 
@@ -493,6 +498,9 @@ void passCallback(cmd* c) {
   if (strcmp(wifiPass, pass.c_str())) {
     strncpy(wifiPass, pass.c_str(), sizeof(wifiPass));
     confChanged = true;
+
+    wifiDisconnect();
+    wifiSetup();
   }
 }
 

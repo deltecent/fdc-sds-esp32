@@ -115,6 +115,15 @@
 
 #define WORD(lsb, msb) ((unsigned short) ((msb << 8) + lsb))
 
+void ARDUINO_ISR_ATTR fdcTimerISR() {
+  toutCnt++;
+
+  fdcTimeout = true;
+
+  // Turn off STAT LED
+  digitalWrite(LED_BUILTIN, false);
+}
+
 void fdcSetup() {
 
   // Drive select LED GPIO
@@ -152,29 +161,24 @@ void fdcBaudrate() {
 }
 
 bool fdcProc(void) {
-  static int last_cmd = 0;
   crblk_t cmd;
 
   if (recvBlock(cmd.block, sizeof(cmd), 1000) == false) {
-    last_cmd = 0;
     return false;
   }
 
   if (memcmp(cmd.cmd, "STAT", 4) == 0) {
     statCnt++;
-    last_cmd = CMD_STAT;
 
     procSTAT(&cmd);
   }
   else if (memcmp(cmd.cmd, "READ", 4) == 0) {
     readCnt++;
-    last_cmd = CMD_READ;
 
     procREAD(&cmd);
   }
   else if (memcmp(cmd.cmd, "WRIT", 4) == 0) {
     writCnt++;
-    last_cmd = CMD_WRIT;
 
     procWRIT(&cmd);
   }
@@ -188,8 +192,8 @@ bool fdcProc(void) {
 
 int procSTAT(crblk_t *cmd) {
 
-  // Update Head Load LED
-  digitalWrite(LED_BUILTIN, cmd->word1[MSB]);
+  // Turn on STAT LED
+  digitalWrite(LED_BUILTIN, true);
 
   // Send STAT response
   cmd->word2[LSB] = 0x00;
@@ -210,7 +214,7 @@ int procSTAT(crblk_t *cmd) {
     digitalWrite(dSelLED[cmd->word1[LSB]], HIGH);
   }
 
-  sprintf(lastStat, "%d %02X %02X %02X %02X", statCnt, cmd->word1[LSB], cmd->word1[MSB], cmd->word2[LSB], cmd->word2[MSB]);
+  sprintf(lastStat, "%02X %02X %02X %02X", cmd->word1[LSB], cmd->word1[MSB], cmd->word2[LSB], cmd->word2[MSB]);
 
   return sendBlock(cmd->block, sizeof(cmd->block), false, 5000);
 }
@@ -408,32 +412,42 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
   unsigned short calc;
   int rcvd;
 
+  // If no data is available, return
+  if (!fdcSerial.available()) {
+    return false;
+  }
+
   // Receive data
   fdcSerial.setTimeout(timeout);
   if ((rcvd = fdcSerial.readBytes(block, len)) != len) {
-      sprintf(lastErr, "TIMEOUT - Received %d of %d bytes\n", rcvd, len);
+      sprintf(lastErr, "BLOCK TIMEOUT - Received %d of %d bytes\n", rcvd, len);
       toutCnt++;
-      flushrx();
+      flushrx(&fdcSerial);
       return false;
   }
 
   // Receive checksum
   if ((rcvd = fdcSerial.readBytes(checksum, sizeof(checksum))) != sizeof(checksum)) {
-      sprintf(lastErr, "TIMEOUT - Received %d of %d bytes\n", rcvd, len);
-      flushrx();
+      sprintf(lastErr, "CHECKSUM TIMEOUT - Received %d of %d bytes\n", rcvd, len);
+      flushrx(&fdcSerial);
       return false;
   }
 
   calc = calcChecksum(block, len);
 
   if (WORD(checksum[LSB], checksum[MSB]) == calc) {
+    // Turn on STAT LED
+    fdcTimeout = false;
+    timerRestart(fdcTimer);
+    digitalWrite(LED_BUILTIN, true);
+
     return true;
   }
 
   errsCnt++;
 
   strcpy(lastErr, "CHECKSUM ERROR");
-  flushrx();
+  flushrx(&fdcSerial);
 
   return false;
 }
