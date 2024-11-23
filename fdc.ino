@@ -134,6 +134,7 @@ void fdcSetup() {
     digitalWrite (dSelLED[d], LOW);
   }
 
+  // Start UART with baud rate above 250K to set up APB clock
   fdcSerial.begin(baudRate, SERIAL_8N1, 16, 17);
   fdcBaudrate();
 }
@@ -152,12 +153,19 @@ void fdcBaudrate() {
       break;
 
     default:
+      break;
       baudRate = DEFAULT_BAUD;
-      cliConsole->printf("Invalid baud rate. Resetting FDC+ to default baud rate %d\r\n", baudRate);
+      cliConsole->printf("Invalid baud rate. Resetting FDC+ to default baud rate %d.\r\n", baudRate);
       break;
   }
 
-  fdcSerial.updateBaudRate(baudRate);
+  //fdcSerial.updateBaudRate(baudRate);
+  fdcSerial.end();
+  fdcSerial.begin(baudRate, SERIAL_8N1, 16, 17);
+
+//  if (fdcSerial.baudRate() != baudRate) {
+//    cliConsole->printf("Could not set baud rate to %d. Returned %d.\r\n", baudRate, fdcSerial.baudRate());
+//  }
 }
 
 bool fdcProc(void) {
@@ -192,7 +200,9 @@ bool fdcProc(void) {
 
 int procSTAT(crblk_t *cmd) {
 
-  // Turn on STAT LED
+  // Turn on STAT LED, reset timer
+  fdcTimeout = false;
+  timerRestart(fdcTimer);
   digitalWrite(LED_BUILTIN, true);
 
   // Send STAT response
@@ -436,11 +446,6 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
   calc = calcChecksum(block, len);
 
   if (WORD(checksum[LSB], checksum[MSB]) == calc) {
-    // Turn on STAT LED
-    fdcTimeout = false;
-    timerRestart(fdcTimer);
-    digitalWrite(LED_BUILTIN, true);
-
     return true;
   }
 

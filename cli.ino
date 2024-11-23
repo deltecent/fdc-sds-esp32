@@ -26,6 +26,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdDelete = cli.addBoundlessCommand("del/ete,rm", deleteCallback);
   cmdRename = cli.addBoundlessCommand("ren/ame,mv", renameCallback);
   cmdClear = cli.addCommand("clear", clearCallback);
+  cmdLoopback = cli.addCommand("loopback,lb", loopbackCallback);
   
   dispPrompt();
 }
@@ -153,6 +154,37 @@ void rebootCallback(cmd* c) {
 
 void updateCallback(cmd* c) {
   cliConsole->printf("Not implemented\r\n");
+}
+
+void loopbackCallback(cmd* c) {
+  byte sendBuf[256];
+  byte recvBuf[256];
+  int rcvd;
+
+  for (int i=0; i<sizeof(sendBuf); i++) {
+    sendBuf[i] = i;
+  }
+
+  cliConsole->printf("FDC+ Loopback Test\r\n\n");
+  cliConsole->printf("Press any key to quit...\r\n");
+
+  while (!cliConsole->available()) {
+    cliConsole->print("+");
+    sendBlock(sendBuf, sizeof(sendBuf), false, 0);
+    if (!recvBlock(recvBuf, sizeof(recvBuf), 1000)) {
+      cliConsole->printf("%s\r\n", lastErr);
+      for (int i=0; i<sizeof(sendBuf); i++) {
+        if (sendBuf[i] != recvBuf[i]) {
+          cliConsole->printf("%04X: %02X != %02X\r\n", i, sendBuf[i], recvBuf[i]);
+        }
+      }
+      delay(5000);
+    } else {
+      cliConsole->print("-");
+    }
+  }
+
+  cliConsole->read();
 }
 
 void typeCallback(cmd* c) {
@@ -388,7 +420,7 @@ void statsCallback(cmd* c) {
 
   int argNum = cmd.countArgs();  // Get number of arguments
 
-  cliConsole->printf("FDC+ Baud Rate: %d\r\n\n", baudRate);
+  cliConsole->printf("FDC+ Baud Rate: %d (%d)\r\n\n", baudRate, fdcSerial.baudRate());
 
   cliConsole->printf("FDC+ Connection Status: %s\r\n\n", (fdcTimeout) ? "Not Connected" : "Connected");
 

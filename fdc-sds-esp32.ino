@@ -13,7 +13,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  5
+#define MINORVER  6
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream TelnetStream;
@@ -106,6 +106,7 @@ Command cmdLogout;
 Command cmdDelete;
 Command cmdRename;
 Command cmdClear;
+Command cmdLoopback;
 
 bool confChanged = false;
 bool sdReady = false;
