@@ -26,6 +26,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdDelete = cli.addBoundlessCommand("del/ete,rm", deleteCallback);
   cmdRename = cli.addBoundlessCommand("ren/ame,mv", renameCallback);
   cmdClear = cli.addCommand("clear", clearCallback);
+  cmdCopy = cli.addBoundlessCommand("copy,cp",copyCallback);
   cmdLoopback = cli.addCommand("loopback,lb", loopbackCallback);
   
   dispPrompt();
@@ -108,6 +109,7 @@ void cliInput(Stream* console, bool echo) {
 void helpCallback(cmd* c) {
   cliConsole->printf("BAUD baud                 Set FDC+ baud rate\r\n");
   cliConsole->printf("CLEAR                     Clear statistics\r\n");
+  cliConsole->printf("COPY src dst              Copy file from src to dst\r\n");
   cliConsole->printf("DELETE filename           Delete file\r\n");
   cliConsole->printf("DIR                       Directory\r\n");
   cliConsole->printf("DUMP                      Dump track buffer\r\n");
@@ -187,6 +189,45 @@ void loopbackCallback(cmd* c) {
   cliConsole->read();
 }
 
+void copyCallback(cmd* c) {
+  Command cmd(c);
+  char ch;
+
+  int argNum = cmd.countArgs();  // Get number of arguments
+
+  if (argNum != 2) {
+    cliConsole->printf("copy src dst\r\n");
+    return;
+  }
+
+  Argument srcArg = cmd.getArg(0);
+  String srcFilename = "/" + srcArg.getValue();
+  Argument dstArg = cmd.getArg(1);
+  String dstFilename = "/" + dstArg.getValue();
+
+  File src = SD.open(srcFilename);
+
+  if (!src) {
+    cliConsole->printf("Could not open source file '%s'\r\n", srcFilename.c_str());
+    return;
+  }
+
+  File dst = SD.open(dstFilename, "w");
+
+  if (!dst) {
+    cliConsole->printf("Could not open destination file '%s'\r\n", dstFilename.c_str());
+    src.close();
+    return;
+  }
+
+  while (src.available()) {
+    dst.write(src.read());
+  }
+
+  src.close();
+  dst.close();
+}
+
 void typeCallback(cmd* c) {
   Command cmd(c);
   char ch;
@@ -240,8 +281,16 @@ void execCallback(cmd* c) {
     }
   }
 
+  String s;
+
   while (f.available()) {
-    cli.parse(f.readStringUntil('\n'));
+    s = f.readStringUntil('\n');
+    s.trim();
+    if (s.charAt(0) == '#') {
+      cliConsole->printf("%s\r\n", s.c_str());
+    } else {
+      cli.parse(s);
+    }
   }
 
   f.close();
@@ -420,9 +469,9 @@ void statsCallback(cmd* c) {
 
   int argNum = cmd.countArgs();  // Get number of arguments
 
-  cliConsole->printf("FDC+ Baud Rate: %d (%d)\r\n\n", baudRate, fdcSerial.baudRate());
-
   cliConsole->printf("FDC+ Connection Status: %s\r\n\n", (fdcTimeout) ? "Not Connected" : "Connected");
+
+  cliConsole->printf("FDC+ Baud Rate: %d (%d)\r\n\n", baudRate, fdcSerial.baudRate());
 
   cliConsole->printf("STAT: %08d\r\n", statCnt);
   cliConsole->printf("READ: %08d\r\n", readCnt);
