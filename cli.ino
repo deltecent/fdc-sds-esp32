@@ -9,7 +9,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdBaud = cli.addBoundlessCommand("b/aud,speed", baudCallback);
   cmdDir = cli.addBoundlessCommand("d/ir,ls", dirCallback);
   cmdMount = cli.addBoundlessCommand("m/ount", mountCallback);
-  cmdUnmount = cli.addBoundlessCommand("u/nmount", unmountCallback);
+  cmdUnmount = cli.addBoundlessCommand("u/nmount,umount", unmountCallback);
   cmdStats = cli.addCommand("s/tat/s", statsCallback);
   cmdSave = cli.addCommand("save,w/rite", saveCallback);
   cmdErase = cli.addCommand("erase", eraseCallback);
@@ -191,7 +191,7 @@ void loopbackCallback(cmd* c) {
 
 void copyCallback(cmd* c) {
   Command cmd(c);
-  char ch;
+  int bytes = 0;
 
   int argNum = cmd.countArgs();  // Get number of arguments
 
@@ -205,7 +205,7 @@ void copyCallback(cmd* c) {
   Argument dstArg = cmd.getArg(1);
   String dstFilename = "/" + dstArg.getValue();
 
-  File src = SD.open(srcFilename);
+  File src = SD.open(srcFilename, "r");
 
   if (!src) {
     cliConsole->printf("Could not open source file '%s'\r\n", srcFilename.c_str());
@@ -222,10 +222,13 @@ void copyCallback(cmd* c) {
 
   while (src.available()) {
     dst.write(src.read());
+    bytes++;
   }
 
   src.close();
   dst.close();
+
+  cliConsole->printf("Copied %d bytes\r\n", bytes);
 }
 
 void typeCallback(cmd* c) {

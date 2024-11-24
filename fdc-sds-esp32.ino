@@ -13,7 +13,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  7
+#define MINORVER  8
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream TelnetStream;
@@ -72,9 +72,9 @@ int dSelLED[MAX_DRIVE] = {13, 12, 14, 27};
 uint8_t trackBuf[TRACKSIZE];
 int lastTrack = -1;
 int lastDrive = -1;
-char lastStat[40] = {0};
-char lastRead[40] = {0};
-char lastWrit[40] = {0};
+char lastStat[80] = {0};
+char lastRead[80] = {0};
+char lastWrit[80] = {0};
 char lastErr[80] = {0};
 
 // Create CLI Object
@@ -135,7 +135,7 @@ void timerSetup() {
 void flushrx(Stream *s) {
   while (s->available()) {
     s->read();
-    delay(100);
+//    delay(100);
   }
 }
 

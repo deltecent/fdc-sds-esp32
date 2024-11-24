@@ -171,6 +171,10 @@ void fdcBaudrate() {
 bool fdcProc(void) {
   crblk_t cmd;
 
+  if (!fdcSerial.available()) {
+    return false;
+  }
+
   if (recvBlock(cmd.block, sizeof(cmd), 1000) == false) {
     return false;
   }
@@ -316,8 +320,7 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-  File diskImg;
-  diskImg=SD.open(drive[d].filename, "r+");
+  File diskImg=SD.open(drive[d].filename, "r+");
 
   // Clear response MSB
   cmd->word1[MSB] = 0x00;
@@ -339,6 +342,7 @@ bool procWRIT(crblk_t *cmd) {
   // Wait for track
   if (recvBlock(trackBuf, len, 5000) == false) {
     sprintf(lastErr, "Timeout waiting for block %d bytes\r\n", len);
+    diskImg.close();
     return false;
   }
 
@@ -360,14 +364,13 @@ bool procWRIT(crblk_t *cmd) {
     sprintf(lastErr, "Drive %d: Could not write %d bytes, wrote %d\r\n", d, len, bytesWritten);
     cmd->word1[LSB] = RESP_WRITE_ERR;
 
-      sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
-    dumpBuffer(cmd->block, sizeof(cmd->block));
+    sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
+    //dumpBuffer(cmd->block, sizeof(cmd->block));
     return false;
   }
 
   cmd->word1[LSB] = RESP_OK;
   sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
-
 
   lastDrive = d;
   lastTrack = track;
@@ -422,11 +425,6 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
   unsigned short calc;
   int rcvd;
 
-  // If no data is available, return
-  if (!fdcSerial.available()) {
-    return false;
-  }
-
   // Receive data
   fdcSerial.setTimeout(timeout);
   if ((rcvd = fdcSerial.readBytes(block, len)) != len) {
@@ -451,7 +449,7 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
 
   errsCnt++;
 
-  strcpy(lastErr, "CHECKSUM ERROR");
+  sprintf(lastErr, "Checksum error receiving %d byte block", len);
   flushrx(&fdcSerial);
 
   return false;
