@@ -13,7 +13,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  8
+#define MINORVER  10
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream TelnetStream;
@@ -67,7 +67,7 @@ drive_t drive[MAX_DRIVE];
 #define MAX_TRACK 2048
 #define TRACKSIZE (137 * 32)
 
-int dSelLED[MAX_DRIVE] = {13, 12, 14, 27};
+int dSelLED[MAX_DRIVE] = {27, 14, 12, 13};
 
 uint8_t trackBuf[TRACKSIZE];
 int lastTrack = -1;
@@ -115,16 +115,16 @@ bool sdReady = false;
 FtpServer ftpSrv;
 
 // FDC+ timeout timer
-#define FDC_TIMEOUT_MS 5000
+#define FDC_TIMEOUT_MS 75
 
 hw_timer_t *fdcTimer = NULL;
 volatile bool fdcTimeout = false;
 
 void timerSetup() {
-    // Set timer frequency to 1Mhz
+  // Set timer frequency to 1Mhz
   fdcTimer = timerBegin(1000000);
 
-    // Attach onTimer function to our timer.
+   // Attach onTimer function to our timer.
   timerAttachInterrupt(fdcTimer, &fdcTimerISR);
 
   // Set alarm to call fdcTimerISR function every second (value in microseconds).

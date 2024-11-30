@@ -118,6 +118,7 @@ void helpCallback(cmd* c) {
   if (cliConsole == &TelnetStream) {
     cliConsole->printf("LOGOUT                    Logout\r\n");
   }
+  cliConsole->printf("LOOPBACK                  FDC+ loopback test\r\n");
   cliConsole->printf("MOUNT [drive filename]    Mount drive\r\n");
   cliConsole->printf("PASS pass                 Set WiFi password\r\n");
   cliConsole->printf("REBOOT                    Reboot device\r\n");

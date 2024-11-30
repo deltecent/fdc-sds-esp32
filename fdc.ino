@@ -116,8 +116,6 @@
 #define WORD(lsb, msb) ((unsigned short) ((msb << 8) + lsb))
 
 void ARDUINO_ISR_ATTR fdcTimerISR() {
-  toutCnt++;
-
   fdcTimeout = true;
 
   // Turn off STAT LED
@@ -179,6 +177,11 @@ bool fdcProc(void) {
     return false;
   }
 
+  // Turn on status LED, reset timer
+  fdcTimeout = false;
+  timerRestart(fdcTimer);
+  digitalWrite(LED_BUILTIN, true);
+
   if (memcmp(cmd.cmd, "STAT", 4) == 0) {
     statCnt++;
 
@@ -203,12 +206,6 @@ bool fdcProc(void) {
 }
 
 int procSTAT(crblk_t *cmd) {
-
-  // Turn on STAT LED, reset timer
-  fdcTimeout = false;
-  timerRestart(fdcTimer);
-  digitalWrite(LED_BUILTIN, true);
-
   // Send STAT response
   cmd->word2[LSB] = 0x00;
   cmd->word2[MSB] = 0x00;
