@@ -32,6 +32,9 @@ While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be bui
 
 Note 1. This serial expansion board has a maximum baud rate of 230.4K.
 
+![Screen Shot 2024-11-30 at 10 44 26 AM](https://github.com/user-attachments/assets/7dd4f022-93c3-48dc-b5de-60770199055c)
+
+
 ## ESP32 DEV KIT 1 Pinout
 
 ![ESP32 DEV KIT 1 PINOUT](https://mischianti.org/wp-content/uploads/2020/11/ESP32-DOIT-DEV-KIT-v1-pinout-mischianti.png)
@@ -51,10 +54,10 @@ D23 - MOSI
 
 Head Load LEDs
 
-D13 - Drive 0
-D12 - Drive 1
-D14 - Drive 2
-D27 - Drive 3
+D27 - Drive 0
+D14 - Drive 1
+D12 - Drive 2
+D13 - Drive 3
 ```
 
 ## Compiling the Firmware
