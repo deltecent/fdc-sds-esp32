@@ -19,7 +19,11 @@ The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the [
 
 ## FDC+ Serial Disk Server PCB
 
-The FDC+ Serial Disk Server PCB will be available in January 2025. The Bill of Materials for the PCB follows:
+The FDC+ Serial Disk Server PCB will be available in January 2025. 
+
+<img width="320" alt="Screenshot 2024-12-24 at 5 06 36 PM" src="https://github.com/user-attachments/assets/9c0f0eb7-4c43-4fe9-b84d-324a5f10a993" />
+
+The Bill of Materials for the PCB follows:
 
 | Qty | Mfg Part No | Descrption | Mouser Part No |
 | :---: | --- | --- | --- |
@@ -30,6 +34,7 @@ The FDC+ Serial Disk Server PCB will be available in January 2025. The Bill of M
 | 2 | M20-7821546 | Headers & Wire Housings 15 PIN SIL VERTICAL | [855-M20-7821546](https://www.mouser.com/ProductDetail/Harwin/M20-7821546?qs=ulE8k0yEMYaXNbedAzK8cQ%3D%3D) |
 | 1 | 4605X-101-221LF | Resistor Networks & Arrays 5pins 220 OHMS Bussed | [652-4605X-1LF-220](https://www.mouser.com/ProductDetail/Bourns/4605X-101-221LF?qs=y2ToytHrPzhsB9XeiWC9CQ%3D%3D) |
 | 5 | 1C10Z5U104M050B | Multilayer Ceramic Capacitors MLCC - Leaded 0.1uF | [75-1C10Z5U104M050B](https://www.mouser.com/ProductDetail/Vishay/1C10Z5U104M050B?qs=2rshWTB%2FmZxIrslbYXpm1Q%3D%3D) |
+| 1 | &nbsp; | TF Micro SD Card Module | [ebay](https://www.ebay.com/itm/203852249807) |
 
 ## Building the FDC+ Serial Disk Server with Separate Components
 
