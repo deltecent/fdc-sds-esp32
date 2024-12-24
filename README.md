@@ -15,7 +15,21 @@ The FDC+ includes a built-in, high speed serial port that can connect to a PC ru
 
 ## ESP32 FDC+ Serial Disk Server
 
-The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the Windows-based server.
+The ESP32 FDC+ Serial Disk Server ("ESP32-SDS") provides an alternative to the [Windows-based server](https://deramp.com/downloads/altair/hardware/fdc+/).
+
+## FDC+ Serial Disk Server PCB
+
+The FDC+ Serial Disk Server PCB will be available in January 2025. The Bill of Materials for the PCB follows:
+
+| Qty | Mfg Part No | Descrption | Mouser Part No |
+| :---: | --- | --- | --- |
+| 1 | ADM3202ANZ | RS-232 Interface IC 3V RS-232 I.C. | [584-ADM3202ANZ](https://www.mouser.com/ProductDetail/Analog-Devices-Inc/ADM3202ANZ?qs=BpaRKvA4VqGy3Fct1O6liQ%3D%3D) |
+| 1 | 6E17C009PBF221 | D-Sub Standard Connectors D-SUB COMM | [523-6E17C009PBF221](https://www.mouser.com/ProductDetail/Amphenol/6E17C009PBF221?qs=2UEroHdFiHFb7qBbHly%252BOw%3D%3D) |
+| 4 | SSL-LX3054IT | Single Color LEDs Red 635nm 45mcd 20mA | [696-SSL-LX3054IT](https://www.mouser.com/ProductDetail/Lumex/SSL-LX3054IT?qs=UWUCXFQQ%252BdkEhC8Xaa4uvA%3D%3D) |
+| 1 | BHR-14-VUA | Headers & Wire Housings 14P Straight | [737-BHR-14-VUA](https://www.mouser.com/ProductDetail/Adam-Tech/BHR-14-VUA?qs=Zix4r1UhwbW8CWl3rs8Caw%3D%3D) |
+| 2 | M20-7821546 | Headers & Wire Housings 15 PIN SIL VERTICAL | [855-M20-7821546](https://www.mouser.com/ProductDetail/Harwin/M20-7821546?qs=ulE8k0yEMYaXNbedAzK8cQ%3D%3D) |
+| 1 | 4605X-101-221LF | Resistor Networks & Arrays 5pins 220 OHMS Bussed | [652-4605X-1LF-220](https://www.mouser.com/ProductDetail/Bourns/4605X-101-221LF?qs=y2ToytHrPzhsB9XeiWC9CQ%3D%3D) |
+| 5 | 1C10Z5U104M050B | Multilayer Ceramic Capacitors MLCC - Leaded 0.1uF | [75-1C10Z5U104M050B](https://www.mouser.com/ProductDetail/Vishay/1C10Z5U104M050B?qs=2rshWTB%2FmZxIrslbYXpm1Q%3D%3D) |
 
 ## Building the FDC+ Serial Disk Server with Separate Components
 
@@ -33,7 +47,6 @@ While a custom ESP32-SDS is being a developed, an ESP32-SDS prototype can be bui
 Note 1. This serial expansion board has a maximum baud rate of 230.4K.
 
 ![Screen Shot 2024-11-30 at 10 44 26 AM](https://github.com/user-attachments/assets/7dd4f022-93c3-48dc-b5de-60770199055c)
-
 
 ## ESP32 DEV KIT 1 Pinout
 
