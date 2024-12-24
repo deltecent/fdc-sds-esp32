@@ -12,7 +12,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdUnmount = cli.addBoundlessCommand("u/nmount,umount", unmountCallback);
   cmdStats = cli.addCommand("s/tat/s", statsCallback);
   cmdSave = cli.addCommand("save,w/rite", saveCallback);
-  cmdErase = cli.addCommand("erase", eraseCallback);
+  cmdWipe = cli.addCommand("wipe", wipeCallback);
   cmdDump = cli.addCommand("d/u/mp", dumpCallback);
   cmdWifi = cli.addBoundlessCommand("wifi", wifiCallback);
   cmdSSID = cli.addBoundlessCommand("ssid", ssidCallback);
@@ -23,7 +23,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdType = cli.addBoundlessCommand("t/ype,cat", typeCallback);
   cmdExec = cli.addBoundlessCommand("e/xec,run", execCallback);
   cmdLogout = cli.addCommand("logout,exit", logoutCallback);
-  cmdDelete = cli.addBoundlessCommand("del/ete,rm", deleteCallback);
+  cmdDelete = cli.addBoundlessCommand("del/ete,era,rm", deleteCallback);
   cmdRename = cli.addBoundlessCommand("ren/ame,mv", renameCallback);
   cmdClear = cli.addCommand("clear", clearCallback);
   cmdCopy = cli.addBoundlessCommand("copy,cp",copyCallback);
@@ -54,8 +54,8 @@ void cliInput(Stream* console, bool echo) {
         break;
 
       case 0x04:
-        if (cliConsole == &TelnetStream) {
-          TelnetStream.disconnectClient();
+        if (cliConsole == &telnet) {
+          telnet.disconnectClient();
           cliIdx = 0;
           cliBuf[0] = 0;
         }
@@ -113,9 +113,8 @@ void helpCallback(cmd* c) {
   cliConsole->printf("DELETE filename           Delete file\r\n");
   cliConsole->printf("DIR                       Directory\r\n");
   cliConsole->printf("DUMP                      Dump track buffer\r\n");
-  cliConsole->printf("ERASE                     Erase configuration\r\n");
   cliConsole->printf("EXEC filename             Execute filename\r\n");
-  if (cliConsole == &TelnetStream) {
+  if (cliConsole == &telnet) {
     cliConsole->printf("LOGOUT                    Logout\r\n");
   }
   cliConsole->printf("LOOPBACK                  FDC+ loopback test\r\n");
@@ -130,6 +129,7 @@ void helpCallback(cmd* c) {
   cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
   cliConsole->printf("UPDATE                    Update firmware\r\n");
   cliConsole->printf("VERSION                   Dispay version\r\n");
+  cliConsole->printf("WIPE                      Wipe configuration\r\n");
   cliConsole->printf("WIFI ON | OFF             Turn WiFi On and Off\r\n");
 }
 
@@ -138,8 +138,8 @@ void versionCallback(cmd* c) {
 }
 
 void logoutCallback(cmd* c) {
-  if (cliConsole == &TelnetStream) {
-    TelnetStream.disconnectClient();
+  if (cliConsole == &telnet) {
+    telnet.disconnectClient();
     cliIdx = 0;
     cliBuf[0] = 0;
   }
@@ -148,15 +148,71 @@ void logoutCallback(cmd* c) {
 void rebootCallback(cmd* c) {
   cliConsole->printf("Rebooting...\r\n");
   SD.end();
-  TelnetStream.disconnectClient();
-  delay(1000);
   WiFi.disconnect();
+  delay(1000);
+  wifiDisconnected();
   delay(1000);
   ESP.restart();
 }
 
 void updateCallback(cmd* c) {
-  cliConsole->printf("Not implemented\r\n");
+  File updateBin = SD.open("/update.bin");
+  int r;
+
+  if (updateBin) {
+    if (updateBin.isDirectory()) {
+      cliConsole->println("Error, update.bin is not a file");
+      updateBin.close();
+      return;
+    }
+
+    size_t updateSize = updateBin.size();
+
+    if (updateSize > 0) {
+      cliConsole->println("Starting update");
+      r = performUpdate(updateBin, updateSize);
+    } else {
+      cliConsole->println("Error, file is empty");
+    }
+
+    updateBin.close();
+
+    // when finished remove the binary from sd card to indicate end of the process
+    if (r) {
+      SD.remove("/update.bin");
+      rebootCallback(c);  
+    }
+  } else {
+    cliConsole->println("Could not load update.bin from SD root");
+  }
+}
+
+// perform the actual update from a given stream
+bool performUpdate(Stream &updateSource, size_t updateSize) {
+  if (Update.begin(updateSize)) {
+    size_t written = Update.writeStream(updateSource);
+    if (written == updateSize) {
+      cliConsole->println("Wrote : " + String(written) + " successfully");
+    } else {
+      cliConsole->println("Wrote only : " + String(written) + "/" + String(updateSize) + ". Retry?");
+      return false;
+    }
+    if (Update.end()) {
+      if (Update.isFinished()) {
+        cliConsole->println("Update successful.");
+        return true;
+      } else {
+        cliConsole->println("Update not finished? Something went wrong!");
+      }
+    } else {
+      cliConsole->println("Error Occurred. Error #: " + String(Update.getError()));
+    }
+
+  } else {
+    cliConsole->println("Not enough space to begin OTA");
+  }
+
+  return false;
 }
 
 void loopbackCallback(cmd* c) {
@@ -193,6 +249,8 @@ void loopbackCallback(cmd* c) {
 void copyCallback(cmd* c) {
   Command cmd(c);
   int bytes = 0;
+  int copied = 0;
+  uint8_t buf[4096];
 
   int argNum = cmd.countArgs();  // Get number of arguments
 
@@ -222,14 +280,18 @@ void copyCallback(cmd* c) {
   }
 
   while (src.available()) {
-    dst.write(src.read());
-    bytes++;
-  }
+    bytes = src.read(buf, sizeof(buf));
+    dst.write(buf, bytes);
+ 
+    copied += bytes;
+
+    fdcProc();
+   }
 
   src.close();
   dst.close();
 
-  cliConsole->printf("Copied %d bytes\r\n", bytes);
+  cliConsole->printf("Copied %d bytes\r\n", copied);
 }
 
 void typeCallback(cmd* c) {
@@ -382,7 +444,7 @@ void mountCallback(cmd* c) {
     for (int d = 0; d < MAX_DRIVE; d++) {
       cliConsole->printf("Drive %d: ", d);
       if (drive[d].mounted) {
-        cliConsole->printf("%-25.25s (%d Tracks)\r\n", drive[d].filename+1, drive[d].tracks);
+        cliConsole->printf("%s\r\n", drive[d].filename+1);
       } else {
         cliConsole->printf("[ NOT MOUNTED ]\r\n");
       }
@@ -449,8 +511,8 @@ void saveCallback(cmd* c) {
   confChanged = false;
 }
 
-// Callback function for erase command
-void eraseCallback(cmd* c) {
+// Callback function for wipe command
+void wipeCallback(cmd* c) {
   nvs_flash_erase();  // erase the NVS partition and...
   nvs_flash_init();   // initialize the NVS partition.
 
@@ -502,6 +564,9 @@ void clearCallback(cmd* c) {
   lastWrit[0] = 0;
   lastErr[0] = 0;
 
+  lastDrive = -1;
+  lastTrack = -1;
+  
   statsCallback(c);
 }
 
@@ -538,7 +603,7 @@ void wifiCallback(cmd* c) {
     wifiSetup();
     confChanged = true;
   } else if (!wifiEnabled && prevWifi) {
-    wifiDisconnect();
+    wifiDisconnected();
     confChanged = true;
   }
 }
@@ -561,7 +626,7 @@ void ssidCallback(cmd* c) {
     strncpy(wifiSSID, ssid.c_str(), sizeof(wifiSSID));
     confChanged = true;
 
-    wifiDisconnect();
+    wifiDisconnected();
     wifiSetup();
   }
 }
@@ -584,7 +649,7 @@ void passCallback(cmd* c) {
     strncpy(wifiPass, pass.c_str(), sizeof(wifiPass));
     confChanged = true;
 
-    wifiDisconnect();
+    wifiDisconnected();
     wifiSetup();
   }
 }

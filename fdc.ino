@@ -227,7 +227,7 @@ int procSTAT(crblk_t *cmd) {
 
   sprintf(lastStat, "%02X %02X %02X %02X", cmd->word1[LSB], cmd->word1[MSB], cmd->word2[LSB], cmd->word2[MSB]);
 
-  return sendBlock(cmd->block, sizeof(cmd->block), false, 5000);
+  return sendBlock(cmd->block, sizeof(cmd->block), false, 7000);
 }
 
 bool procREAD(crblk_t *cmd) {
@@ -247,13 +247,8 @@ bool procREAD(crblk_t *cmd) {
     return false;
   }
 
-  if (track >= drive[d].tracks) {
-    cliConsole->printf("Drive %d: invalid track %d\r\n", d, track);
-    return false;
-  }
-  
-  if (len > TRACKSIZE) {
-    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
+  if (len > sizeof(trackBuf)) {
+    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, sizeof(trackBuf));
     return false;
   }
 
@@ -286,7 +281,20 @@ bool procREAD(crblk_t *cmd) {
     lastTrack = track;
   }
 
-  return sendBlock(trackBuf, len, false, 5000);
+  // The CP/M for Serial Drives does not send STAT
+  // commands. If we have not received any STAT
+  // commands, turn on head load during READ
+  if (!statCnt) {
+    digitalWrite(dSelLED[d], HIGH);
+  }
+
+  bool r = sendBlock(trackBuf, len, false, 7000);
+
+  if (!statCnt) {
+    digitalWrite(dSelLED[d], LOW);
+  }
+
+  return r;
 }
 
 bool procWRIT(crblk_t *cmd) {
@@ -307,13 +315,8 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-  if (track >= drive[d].tracks) {
-    cliConsole->printf("Drive %d: invalid track %d\r\n", d, track);
-    return false;
-  }
-  
-  if (len > TRACKSIZE) {
-    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, TRACKSIZE);
+  if (len > sizeof(trackBuf)) {
+    cliConsole->printf("Drive %d: requested length %d exceeds buffer size %d\r\n", d, len, sizeof(trackBuf));
     return false;
   }
 
@@ -331,13 +334,21 @@ bool procWRIT(crblk_t *cmd) {
      return false;
   }
 
+  // The CP/M for Serial Drives does not send STAT
+  // commands. If we have not received any STAT
+  // commands, turn on head load during WRIT
+  if (!statCnt) {
+    digitalWrite(dSelLED[d], HIGH);
+  }
+
   // Let FDC+ know we're ready to receive the track
   cmd->word1[LSB] = RESP_OK;
 
   sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
 
+
   // Wait for track
-  if (recvBlock(trackBuf, len, 5000) == false) {
+  if (recvBlock(trackBuf, len, 7000) == false) {
     sprintf(lastErr, "Timeout waiting for block %d bytes\r\n", len);
     diskImg.close();
     return false;
@@ -371,6 +382,10 @@ bool procWRIT(crblk_t *cmd) {
 
   lastDrive = d;
   lastTrack = track;
+
+  if (!statCnt) {
+    digitalWrite(dSelLED[d], LOW);
+  }
 
   return true;
 }

@@ -2,7 +2,7 @@
 #include <FS.h>
 #include <SD.h>
 #include <WiFi.h>
-//#include <TelnetStream.h>
+#include <Update.h>
 #include <ESPTelnetStream.h>
 #include <SimpleCLI.h>
 #include "SimpleFTPServer.h"
@@ -13,14 +13,16 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  9
+#define MINORVER  10
 
 HardwareSerial fdcSerial(2);
-ESPTelnetStream TelnetStream;
+ESPTelnetStream telnet;
 
 Preferences fdcPrefs;
 
-int baudRate = 230400;
+#define DEFAULT_BAUD  403200;
+
+int baudRate = DEFAULT_BAUD;
 
 bool wifiEnabled = false;
 char wifiSSID[80];
@@ -45,8 +47,6 @@ typedef struct CRBLOCK {
 #define LSB 0
 #define MSB 1
 
-#define DEFAULT_BAUD  230400
-
 // Statistics
 uint32_t statCnt = 0;
 uint32_t readCnt = 0;
@@ -59,17 +59,13 @@ volatile uint32_t toutCnt = 0;
 typedef struct DRIVE {
   char  mounted;
   char  filename[30];
-  int16_t tracks;
 } drive_t;
 
 drive_t drive[MAX_DRIVE];
 
-#define MAX_TRACK 2048
-#define TRACKSIZE (137 * 32)
-
 int dSelLED[MAX_DRIVE] = {27, 14, 12, 13};
 
-uint8_t trackBuf[TRACKSIZE];
+uint8_t trackBuf[1024 * 8];
 int lastTrack = -1;
 int lastDrive = -1;
 char lastStat[80] = {0};
@@ -92,7 +88,7 @@ Command cmdMount;
 Command cmdUnmount;
 Command cmdStats;
 Command cmdSave;
-Command cmdErase;
+Command cmdWipe;
 Command cmdDump;
 Command cmdWifi;
 Command cmdSSID;
@@ -248,9 +244,9 @@ void loop() {
   cliInput(&Serial, true);
 
   if (WiFi.status() == WL_CONNECTED) {
-    TelnetStream.loop();
-    if (TelnetStream.isConnected()) {
-      cliInput(&TelnetStream, false);
+    telnet.loop();
+    if (telnet.isConnected()) {
+      cliInput(&telnet, false);
     }
 
     ftpSrv.handleFTP();

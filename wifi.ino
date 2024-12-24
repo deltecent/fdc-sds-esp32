@@ -17,39 +17,26 @@ void wifiSetup() {
   WiFi.setAutoReconnect(true);
   WiFi.onEvent(wifiEvent);
 
-  Serial.printf("WiFi connecting to '%s' ..", wifiSSID);
+  Serial.printf("WiFi connecting to '%s'\r\n", wifiSSID);
+}
 
-  int timeout = 0;
-  int status;
-
-  while ((status = WiFi.status()) != WL_CONNECTED) {
-    Serial.print(".");
-
-    delay(500);
-    if (timeout++ > 40) {
-      Serial.printf(" NOT CONNECTED\r\n");
-      WiFi.disconnect();
-      return;
-    }
-  }
-
-  Serial.print(" CONNECTED ");
-  Serial.print(WiFi.localIP());
-
-  Serial.print("\r\n");
-
+void wifiConnected() {
   // Start telnet console
-  TelnetStream.begin();
-  TelnetStream.onConnect(telnetConnected);
-  TelnetStream.onDisconnect(telnetDisconnected);
+  if (telnet.begin(23, false)) {
+    telnet.onConnect(telnetConnected);
+    telnet.onDisconnect(telnetDisconnected);
+  }
+  else {
+    Serial.printf("Could not start telnet server\r\n");
+  }
 
   // Start FTP server
   ftpSrv.begin("fdc","fdc");    //username, password for ftp.
 }
 
-void wifiDisconnect() {
+void wifiDisconnected() {
   ftpSrv.end();
-  TelnetStream.stop();
+  telnet.stop();
 
   if (WiFi.isConnected()) {
     Serial.printf("WiFi disconnecting from '%s'.\r\n", wifiSSID);
@@ -68,8 +55,14 @@ void wifiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
     case ARDUINO_EVENT_WIFI_STA_START:           Serial.println("WiFi client started"); break;
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:       Serial.println("Connected to access point"); break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:    Serial.println("Disconnected from WiFi access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.println("Connected to access point");
+      wifiConnected();
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.println("Disconnected from WiFi access point");
+      wifiDisconnected();
+      break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.print("Obtained IP address: ");
@@ -99,7 +92,7 @@ void wifiEvent(WiFiEvent_t event) {
 }
 
 void telnetConnected(String ip) {
-  cliConsole = &TelnetStream;
+  cliConsole = &telnet;
   cliConsole->printf("\r\nESP32 FDC+ Serial Drive Server %d.%d\r\n\r\n", MAJORVER, MINORVER);
   dispPrompt();
 
