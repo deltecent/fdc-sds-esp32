@@ -62,6 +62,10 @@ void wifiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("Disconnected from WiFi access point");
       wifiDisconnected();
+      if (wifiEnabled) {
+        Serial.println("Attempting to reconnect");
+        wifiSetup();
+      }
       break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:

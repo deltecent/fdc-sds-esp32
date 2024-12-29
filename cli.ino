@@ -84,7 +84,7 @@ void cliInput(Stream* console, bool echo) {
           if (echo) {
             cliConsole->print("\b \b");
           }
-          cliBuf[cliIdx--] = 0;
+          cliBuf[--cliIdx] = 0;
         }
         break;
 
