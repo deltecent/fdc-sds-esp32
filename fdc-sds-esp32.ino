@@ -13,7 +13,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  11
+#define MINORVER  12
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -57,8 +57,9 @@ volatile uint32_t toutCnt = 0;
 #define MAX_DRIVE  4
 
 typedef struct DRIVE {
-  char  mounted;
-  char  filename[30];
+  char mounted;
+  char filename[30];
+  File diskImg;
 } drive_t;
 
 drive_t drive[MAX_DRIVE];

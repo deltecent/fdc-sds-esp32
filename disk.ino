@@ -2,10 +2,10 @@ void diskSetup() {
 //  listDir(SD, "/", 0);
 }
 
-void mountDrive(int driveno, const char *filename) {
+bool mountDrive(int driveno, const char *filename) {
   if (driveno < 0 || driveno >= MAX_DRIVE) {
     cliConsole->printf("Drive %d: invalid drive number\r\n");
-    return;
+    return false;
   }
   
   if (drive[driveno].mounted) {
@@ -13,6 +13,13 @@ void mountDrive(int driveno, const char *filename) {
   }
 
   if (SD.exists(filename)) {
+    drive[driveno].diskImg=SD.open(drive[driveno].filename, "r+");
+
+    if (!drive[driveno].diskImg) {
+      cliConsole->printf("Drive %d: could not open '%s'\r\n", driveno, filename);
+      return false;
+    }
+
     drive[driveno].mounted = true;
     strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
 
@@ -26,11 +33,14 @@ void mountDrive(int driveno, const char *filename) {
   else {
     cliConsole->printf("File '%s' does not exist\r\n", filename);
   }
+
+  return true;
 }
 
 void unmountDrive(int driveno) {
   if (driveno >= 0 && driveno < MAX_DRIVE) {
-    if (drive[driveno].mounted) {
+    if (drive[driveno].mounted || drive[driveno].diskImg) {
+      drive[driveno].diskImg.close();
       drive[driveno].mounted = 0;
       drive[driveno].filename[0]= 0;
       cliConsole->printf("Drive %d: unmounted\r\n", driveno);

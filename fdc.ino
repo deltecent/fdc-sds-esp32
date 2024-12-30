@@ -258,19 +258,19 @@ bool procREAD(crblk_t *cmd) {
   }
 
   if (lastDrive != d || lastTrack != track) {
-    File diskImg;
-    diskImg=SD.open(drive[d].filename);
+  //  File diskImg;
+  //  diskImg=SD.open(drive[d].filename);
 
-    if (!diskImg) {
-      cliConsole->printf("Drive %d: could not open '%s'\r\n", d, "filename");
-      return false;
-    }
+  //  if (!diskImg) {
+  //    cliConsole->printf("Drive %d: could not open '%s'\r\n", d, "filename");
+  //    return false;
+  //  }
 
-    diskImg.seek(track * len);
+    drive[d].diskImg.seek(track * len);
     
-    int bytesRead = diskImg.read(trackBuf, len);
+    int bytesRead = drive[d].diskImg.read(trackBuf, len);
 
-    diskImg.close();
+  //  diskImg.close();
     
     if (bytesRead != len) {
       cliConsole->printf("Drive %d: Could not read %d bytes\r\n", d, len);
@@ -320,18 +320,18 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-  File diskImg=SD.open(drive[d].filename, "r+");
+//  File diskImg=SD.open(drive[d].filename, "r+");
 
   // Clear response MSB
   cmd->word1[MSB] = 0x00;
 
-  if (!diskImg) {
+  if (!drive[d].mounted) {
     cliConsole->printf("Drive %d: could not open '%s'\r\n", d, drive[d].filename);
     // Send WRIT response
     cmd->word1[LSB] = RESP_NOT_READY;
 
     sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
-     return false;
+    return false;
   }
 
   // The CP/M for Serial Drives does not send STAT
@@ -346,24 +346,23 @@ bool procWRIT(crblk_t *cmd) {
 
   sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
 
-
   // Wait for track
   if (recvBlock(trackBuf, len, 7000) == false) {
     sprintf(lastErr, "Timeout waiting for block %d bytes\r\n", len);
-    diskImg.close();
+//    diskImg.close();
     return false;
   }
 
   // Seek to track
-  diskImg.seek(track * len);
+  drive[d].diskImg.seek(track * len);
 
-  if (diskImg.position() != track * len) {
+  if (drive[d].diskImg.position() != track * len) {
     sprintf(lastErr, "Drive %d: seek to %d failed\r\n", d, track * len);
   } else {
-   bytesWritten = diskImg.write(trackBuf, len);
+   bytesWritten = drive[d].diskImg.write(trackBuf, len);
   }
 
-  diskImg.close();
+//  diskImg.close();
 
   // Send write status
   memcpy(cmd->cmd, "WSTA", 4);
