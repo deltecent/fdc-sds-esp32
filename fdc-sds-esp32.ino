@@ -13,7 +13,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  12
+#define MINORVER  13
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -182,10 +182,10 @@ void loadPrefs() {
   confChanged = false;
 }
 
-void sdSetup() {
-  if (!SD.begin(5)) {
+bool sdSetup() {
+  if (!SD.begin(5,SPI,4000000,"/sd",8)) {
     Serial.print("Could not initialize SD card\r\n");
-    return;
+    return false;
   }
 
   sdReady = true;
@@ -212,6 +212,8 @@ void sdSetup() {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\r\n", cardSize);
+
+  return true;
 }
 
 void setup() {

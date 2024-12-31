@@ -8,6 +8,13 @@ bool mountDrive(int driveno, const char *filename) {
     return false;
   }
   
+  // Try to initialize SD card if not ready
+  if (!sdReady) {
+    if (!sdSetup()) {
+      return false;
+    }
+  }
+
   if (drive[driveno].mounted) {
     unmountDrive(driveno);
   }
@@ -56,6 +63,13 @@ void unmountDrive(int driveno) {
 void listDir(fs::SDFS &fs, const char * dirname, uint8_t levels){
   const char *f;
 
+  // Try to initialize SD card if not ready
+  if (!sdReady) {
+    if (!sdSetup()) {
+      return;
+    }
+  }
+
   cliConsole->printf("Listing directory: %s\r\n", dirname);
 
   File root = fs.open(dirname);
@@ -69,7 +83,7 @@ void listDir(fs::SDFS &fs, const char * dirname, uint8_t levels){
   }
 
   File file = root.openNextFile();
-  while(file){
+  while(file) {
     f = file.name();
     if (*f != '.') {
       cliConsole->printf("%-25.25s %8d\r\n", f, file.size());
