@@ -20,7 +20,7 @@ bool mountDrive(int driveno, const char *filename) {
   }
 
   if (SD.exists(filename)) {
-    drive[driveno].diskImg=SD.open(drive[driveno].filename, "r+");
+    drive[driveno].diskImg=SD.open(filename, "r+");
 
     if (!drive[driveno].diskImg) {
       cliConsole->printf("Drive %d: could not open '%s'\r\n", driveno, filename);
