@@ -102,6 +102,4 @@ Compile and upload the firmware by clicking the right arrow (upload) icon at the
 
 If the upload was successful, the ESP32 will reboot and you will see the D1-D4 LEDs light up during firmware initialization. You should now be able to connect to FDC-SDS-ESP32 command line using a terminal program set to 115,200.
 
-The blue LED on the ESP32 board will flash when a good packet of data is received from the FDC+. If using Serial CP/M or Serial FLEX, it will also flash upon receipt of a good packet.
-
-If the blue LED does not blink, verify that your baud rate is set correctly in the FDC+ and FDC-SDS-ESP32, check your serial cable (you should not need any null-modem cables or adapters), and enter the `STATS` command to check for errors.
+You should now reference the Wiki at the top of this page.
