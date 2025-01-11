@@ -82,12 +82,22 @@ D13 - Drive 3
 
 Install the [Arduino IDE](https://www.arduino.cc/en/software).
 
-In the Board Manager, install "esp32 by Espressif Systems" and select the "DOIT ESP32 DEVKIT 1" board.
+In the Board Manager, install `esp32 by Espressif Systems` and select the `DOIT ESP32 DEVKIT 1` board.
 
-Install the following libraries:
+Using the Library Manager, install the following libraries:
 
 * ESP Telnet
 * SimpleCLI
 
-Compile and upload the Firmware.
+Download the sketch (firmware source code).
+
+Option 1: Clone the repository with Git (recommended)  
+Option 2: Download the ZIP file and extract the files into a folder named `fdc-sds-esp32`.
+
+Use File->Open.. to open `fdc-sds-esp32.ino` located in the `fdc-sds-esp32` folder.
+
+Verify that your ESP32 is connected to your computer with the USB cable. The status is located in the lower right of the Arduino IDE.
+
+Compile and upload the firmware by clicking the right arrow (upload) icon at the top left of the Arduino IDE.
+
 
