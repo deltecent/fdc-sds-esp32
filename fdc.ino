@@ -1,13 +1,6 @@
 /*----------------------------------------------------------------------------------
 ;
-;  Altair FDC+ Serial Disk Server
-;      This program serves Altair disk images over a high speed serial port
-;      for computers running the FDC+ Enhanced Floppy Disk Controller.
-;
-;     Version     Date        Author         Notes
-;      1.0     11/03/2024     P. Linstruth   Original
-;
-;-------------------------------------------------------------------------------------
+;  The FDC+ Serial Drive Server protocol was designed by Mike Douglas.
 ;
 ;  Communication with the server is over a serial port at 403.2K Baud, 8N1.
 ;  All transactions are initiated by the FDC. The second choice for baud rate
@@ -257,21 +250,11 @@ bool procREAD(crblk_t *cmd) {
     return false;
   }
 
-  if (lastDrive != d || lastTrack != track) {
-  //  File diskImg;
-  //  diskImg=SD.open(drive[d].filename);
-
-  //  if (!diskImg) {
-  //    cliConsole->printf("Drive %d: could not open '%s'\r\n", d, "filename");
-  //    return false;
-  //  }
-
+  if (lastDrive != d || lastTrack != track || lastLen != len) {
     drive[d].diskImg.seek(track * len);
     
     int bytesRead = drive[d].diskImg.read(trackBuf, len);
 
-  //  diskImg.close();
-    
     if (bytesRead != len) {
       cliConsole->printf("Drive %d: Could not read %d bytes\r\n", d, len);
       return false;
@@ -279,18 +262,19 @@ bool procREAD(crblk_t *cmd) {
 
     lastDrive = d;
     lastTrack = track;
+    lastLen = len;
   }
 
-  // The CP/M for Serial Drives does not send STAT
-  // commands. If we have not received any STAT
+  // CP/M and FLEX for Serial Drives does not send
+  // STAT commands. If we have not received any STAT
   // commands, turn on head load during READ
-  if (!statCnt) {
+  //if (!fdcTimeout) {
     digitalWrite(dSelLED[d], HIGH);
-  }
+  //}
 
   bool r = sendBlock(trackBuf, len, false, 7000);
 
-  if (!statCnt) {
+  if (!fdcTimeout) {
     digitalWrite(dSelLED[d], LOW);
   }
 
@@ -320,8 +304,6 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-//  File diskImg=SD.open(drive[d].filename, "r+");
-
   // Clear response MSB
   cmd->word1[MSB] = 0x00;
 
@@ -334,12 +316,12 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-  // The CP/M for Serial Drives does not send STAT
-  // commands. If we have not received any STAT
+  // CP/M and FLEX for Serial Drives does not send
+  // STAT commands. If we have not received any STAT
   // commands, turn on head load during WRIT
-  if (!statCnt) {
+  //if (!fdcTimeout) {
     digitalWrite(dSelLED[d], HIGH);
-  }
+  //}
 
   // Let FDC+ know we're ready to receive the track
   cmd->word1[LSB] = RESP_OK;
@@ -349,7 +331,6 @@ bool procWRIT(crblk_t *cmd) {
   // Wait for track
   if (recvBlock(trackBuf, len, 7000) == false) {
     sprintf(lastErr, "Timeout waiting for block %d bytes\r\n", len);
-//    diskImg.close();
     return false;
   }
 
@@ -362,8 +343,6 @@ bool procWRIT(crblk_t *cmd) {
    bytesWritten = drive[d].diskImg.write(trackBuf, len);
   }
 
-//  diskImg.close();
-
   // Send write status
   memcpy(cmd->cmd, "WSTA", 4);
 
@@ -372,7 +351,6 @@ bool procWRIT(crblk_t *cmd) {
     cmd->word1[LSB] = RESP_WRITE_ERR;
 
     sendBlock(cmd->block, sizeof(cmd->block), false, 1000);
-    //dumpBuffer(cmd->block, sizeof(cmd->block));
     return false;
   }
 
@@ -381,8 +359,9 @@ bool procWRIT(crblk_t *cmd) {
 
   lastDrive = d;
   lastTrack = track;
+  lastLen = len;
 
-  if (!statCnt) {
+  if (!fdcTimeout) {
     digitalWrite(dSelLED[d], LOW);
   }
 
@@ -467,6 +446,10 @@ bool recvBlock(byte *block, int len, unsigned long timeout) {
 }
 
 void dumpBuffer(byte *buffer, int len) {
+  if (len < 0) {
+    return;
+  }
+
   for (int i=0; i<len; i++) {
     if (i % 16 == 0) {
       cliConsole->printf("\r\n%04X: ", i);

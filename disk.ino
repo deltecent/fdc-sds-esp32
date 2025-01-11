@@ -1,5 +1,20 @@
 void diskSetup() {
-//  listDir(SD, "/", 0);
+  char key[10];
+
+  for (int d=0; d<MAX_DRIVE; d++) {
+    drive[d].filename[0] = 0;
+    drive[d].mounted = false;
+
+    sprintf(key, "Drive%d", d);
+
+    if (fdcPrefs.isKey(key)) {
+      fdcPrefs.getString(key, drive[d].filename, sizeof(drive[d].filename));
+
+      if (drive[d].filename[0]) {
+        mountDrive(d, drive[d].filename);
+      }
+    }
+  }
 }
 
 bool mountDrive(int driveno, const char *filename) {
@@ -28,6 +43,7 @@ bool mountDrive(int driveno, const char *filename) {
     }
 
     drive[driveno].mounted = true;
+    drive[driveno].size = drive[driveno].diskImg.size();
     strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
 
     cliConsole->printf("Drive %d: mounted as '%s's.\r\n", driveno, filename+1);
@@ -86,8 +102,9 @@ void listDir(fs::SDFS &fs, const char * dirname, uint8_t levels){
   while(file) {
     f = file.name();
     if (*f != '.') {
-      cliConsole->printf("%-25.25s %8d\r\n", f, file.size());
+      cliConsole->printf("%-32.32s %8d\r\n", f, file.size());
     }
+    file.close();
     file = root.openNextFile();
   }
 

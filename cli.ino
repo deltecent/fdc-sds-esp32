@@ -122,15 +122,15 @@ void helpCallback(cmd* c) {
   cliConsole->printf("PASS pass                 Set WiFi password\r\n");
   cliConsole->printf("REBOOT                    Reboot device\r\n");
   cliConsole->printf("RENAME old new            Rename file\r\n");
-  cliConsole->printf("SAVE                      Save configuration\r\n");
+  cliConsole->printf("SAVE                      Save configuration to NVRAM\r\n");
   cliConsole->printf("SSID ssid                 Set WiFi SSID\r\n");
   cliConsole->printf("STATS                     FDC+ Statistics\r\n");
   cliConsole->printf("TYPE filename             Display file\r\n");
   cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
   cliConsole->printf("UPDATE                    Update firmware\r\n");
   cliConsole->printf("VERSION                   Dispay version\r\n");
-  cliConsole->printf("WIPE                      Wipe configuration\r\n");
-  cliConsole->printf("WIFI ON | OFF             Turn WiFi On and Off\r\n");
+  cliConsole->printf("WIPE                      Wipe NVRAM configuration\r\n");
+  cliConsole->printf("WIFI [ON | OFF]           Turn WiFi On and Off\r\n");
 }
 
 void versionCallback(cmd* c) {
@@ -444,7 +444,7 @@ void mountCallback(cmd* c) {
     for (int d = 0; d < MAX_DRIVE; d++) {
       cliConsole->printf("Drive %d: ", d);
       if (drive[d].mounted) {
-        cliConsole->printf("%s\r\n", drive[d].filename+1);
+        cliConsole->printf("%-30.30s %d\r\n", drive[d].filename+1, drive[d].size);
       } else {
         cliConsole->printf("[ NOT MOUNTED ]\r\n");
       }
@@ -526,7 +526,7 @@ void wipeCallback(cmd* c) {
 // Callback function for dump command
 void dumpCallback(cmd* c) {
   cliConsole->printf("D:%02d T:%04d Track Buffer:\r\n", lastDrive, lastTrack);
-  dumpBuffer(trackBuf, sizeof(trackBuf));
+  dumpBuffer(trackBuf, lastLen);
 }
 
 // Callback function for stats command

@@ -11,10 +11,10 @@ void wifiSetup() {
     return;
   }
   
-  WiFi.setHostname("ESP32-FDC-SDS");
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname("ESP32-FDC-SDS");
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.begin(wifiSSID, wifiPass);
-  WiFi.setAutoReconnect(true);
   WiFi.onEvent(wifiEvent);
 
   Serial.printf("WiFi connecting to '%s'\r\n", wifiSSID);
@@ -48,7 +48,6 @@ void wifiDisconnected() {
 
 // WARNING: This function is called from a separate FreeRTOS task (thread)!
 void wifiEvent(WiFiEvent_t event) {
-  Serial.printf("[WiFi-event] event: %d\r\n", event);
 
   switch (event) {
     case ARDUINO_EVENT_WIFI_READY:               Serial.println("WiFi interface ready"); break;

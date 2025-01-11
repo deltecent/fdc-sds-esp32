@@ -1,3 +1,14 @@
+/*----------------------------------------------------------------------------------
+;
+;  FDC+ Serial Disk Server for ESP32 DEVKIT 1
+;      This program serves disk images over a high speed serial port
+;      using the FDC+ Serial Drive Server protocol.
+;
+;     Version  Date        Author         Notes
+;      1.0     01/05/2024  P. Linstruth   Original
+;
+;-------------------------------------------------------------------------------------*/
+
 #include <Preferences.h>
 #include <FS.h>
 #include <SD.h>
@@ -13,7 +24,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  14
+#define MINORVER  15
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -59,6 +70,7 @@ volatile uint32_t toutCnt = 0;
 typedef struct DRIVE {
   char mounted;
   char filename[30];
+  int size;
   File diskImg;
 } drive_t;
 
@@ -69,6 +81,7 @@ int dSelLED[MAX_DRIVE] = {27, 14, 12, 13};
 uint8_t trackBuf[1024 * 8];
 int lastTrack = -1;
 int lastDrive = -1;
+int lastLen = -1;
 char lastStat[80] = {0};
 char lastRead[80] = {0};
 char lastWrit[80] = {0};
@@ -162,22 +175,7 @@ void loadPrefs() {
     fdcPrefs.getString("wifiPass", wifiPass, sizeof(wifiPass));
   }
 
-  char key[10];
 
-  for (int d=0; d<MAX_DRIVE; d++) {
-    drive[d].filename[0] = 0;
-    drive[d].mounted = false;
-
-    sprintf(key, "Drive%d", d);
-
-    if (fdcPrefs.isKey(key)) {
-      fdcPrefs.getString(key, drive[d].filename, sizeof(drive[d].filename));
-
-      if (drive[d].filename[0]) {
-        mountDrive(d, drive[d].filename);
-      }
-    }
-  }
 
   confChanged = false;
 }
@@ -191,9 +189,6 @@ bool sdSetup() {
   sdReady = true;
 
   uint16_t sectorSize = SD.sectorSize();
-  uint16_t bytesRead;
-  uint32_t sector = 0;
-  uint8_t *buffer = NULL;
 
   Serial.printf("Sector Size: %d\r\n", SD.sectorSize());
 
@@ -213,6 +208,9 @@ bool sdSetup() {
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\r\n", cardSize);
 
+  // Mount disks
+  diskSetup();
+
   return true;
 }
 
@@ -230,12 +228,12 @@ void setup() {
 
   sdSetup();
 
-  diskSetup();
-
   loadPrefs();
 
   wifiSetup();
 
+  diskSetup();
+  
   timerSetup();
 
   fdcSetup();
