@@ -89,7 +89,7 @@ Using the Library Manager, install the following libraries:
 * ESP Telnet
 * SimpleCLI
 
-Download the sketch (firmware source code).
+Download the sketch (firmware source code):
 
 Option 1: Clone the repository with Git (recommended)  
 Option 2: Download the ZIP file and extract the files into a folder named `fdc-sds-esp32`.
