@@ -100,4 +100,4 @@ Verify that your ESP32 is connected to your computer with the USB cable. The sta
 
 Compile and upload the firmware by clicking the right arrow (upload) icon at the top left of the Arduino IDE.
 
-
+If the upload was successful, the ESP32 will reboot and you will see the D1-D4 LEDs light up during firmware initialization. You should now be able to connect to FDC-SDS-ESP32 command line using a terminal program set to 115,200.
