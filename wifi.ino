@@ -1,8 +1,8 @@
 
 void wifiSetup() {
 
-  if (!wifiEnabled) {
-    WiFi.disconnect(true);
+  if (!wifiEnabled || WiFi.status() == WL_CONNECTED) {
+    WiFi.disconnect(true);  // Will automatically reconnect
     return;
   }
 
@@ -11,11 +11,13 @@ void wifiSetup() {
     return;
   }
   
+  WiFi.mode(WIFI_MODE_NULL);
+  WiFi.setHostname(wifiName);
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname("ESP32-FDC-SDS");
-  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
-  WiFi.begin(wifiSSID, wifiPass);
+
   WiFi.onEvent(wifiEvent);
+
+  WiFi.begin(wifiSSID, wifiPass);
 
   Serial.printf("WiFi connecting to '%s'\r\n", wifiSSID);
 }
@@ -37,13 +39,26 @@ void wifiConnected() {
 void wifiDisconnected() {
   ftpSrv.end();
   telnet.stop();
+}
 
-  if (WiFi.isConnected()) {
-    Serial.printf("WiFi disconnecting from '%s'.\r\n", wifiSSID);
+void setClock() {
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");  // UTC
+
+  cliConsole->print(F("Waiting for NTP time sync: "));
+  time_t now = time(nullptr);
+  int tries = 20;
+  while ((now < 8 * 3600 * 2) && tries--) {
+    yield();
+    delay(500);
+    cliConsole->print(F("."));
+    now = time(nullptr);
   }
 
-  // Disconnect and turn off radio
-  WiFi.disconnect(true);
+  cliConsole->printf(F("\r\n"));
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  cliConsole->print(F("Current time: "));
+  cliConsole->printf("%.24s\r\n", F(asctime(&timeinfo)));
 }
 
 // WARNING: This function is called from a separate FreeRTOS task (thread)!
@@ -68,8 +83,9 @@ void wifiEvent(WiFiEvent_t event) {
       break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      Serial.print("Obtained IP address: ");
-      Serial.println(WiFi.localIP());
+      cliConsole->print("Obtained IP address: ");
+      cliConsole->println(WiFi.localIP());
+      setClock();
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:          Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;

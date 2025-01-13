@@ -17,6 +17,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdWifi = cli.addBoundlessCommand("wifi", wifiCallback);
   cmdSSID = cli.addBoundlessCommand("ssid", ssidCallback);
   cmdPass = cli.addBoundlessCommand("pass", passCallback);
+  cmdName = cli.addBoundlessCommand("host/name", hostnameCallback);
   cmdReboot = cli.addCommand("reboot", rebootCallback);
   cmdUpdate = cli.addCommand("update", updateCallback);
   cmdVersion = cli.addCommand("v/er/sion", versionCallback);
@@ -28,6 +29,7 @@ void cliSetup(Stream* defaultConsole) {
   cmdClear = cli.addCommand("clear", clearCallback);
   cmdCopy = cli.addBoundlessCommand("copy,cp",copyCallback);
   cmdLoopback = cli.addCommand("loopback,lb", loopbackCallback);
+  cmdTime = cli.addCommand("time,date", timeCallback);
   
   dispPrompt();
 }
@@ -114,6 +116,7 @@ void helpCallback(cmd* c) {
   cliConsole->printf("DIR                       Directory\r\n");
   cliConsole->printf("DUMP                      Dump track buffer\r\n");
   cliConsole->printf("EXEC filename             Execute filename\r\n");
+  cliConsole->printf("HOSTNAME name             Set Wifi hostname\r\n");
   if (cliConsole == &telnet) {
     cliConsole->printf("LOGOUT                    Logout\r\n");
   }
@@ -125,6 +128,7 @@ void helpCallback(cmd* c) {
   cliConsole->printf("SAVE                      Save configuration to NVRAM\r\n");
   cliConsole->printf("SSID ssid                 Set WiFi SSID\r\n");
   cliConsole->printf("STATS                     FDC+ Statistics\r\n");
+  cliConsole->printf("TIME                      Display time\r\n");
   cliConsole->printf("TYPE filename             Display file\r\n");
   cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
   cliConsole->printf("UPDATE                    Update firmware\r\n");
@@ -148,9 +152,8 @@ void logoutCallback(cmd* c) {
 void rebootCallback(cmd* c) {
   cliConsole->printf("Rebooting...\r\n");
   SD.end();
+  wifiEnabled = false;
   WiFi.disconnect();
-  delay(1000);
-  wifiDisconnected();
   delay(1000);
   ESP.restart();
 }
@@ -213,6 +216,15 @@ bool performUpdate(Stream &updateSource, size_t updateSize) {
   }
 
   return false;
+}
+
+void timeCallback(cmd* c) {
+  struct tm timeinfo;
+
+  time_t now = time(nullptr);
+  gmtime_r(&now, &timeinfo);
+
+  cliConsole->printf("%.24s\r\n", F(asctime(&timeinfo)));
 }
 
 void loopbackCallback(cmd* c) {
@@ -500,6 +512,7 @@ void saveCallback(cmd* c) {
   fdcPrefs.putBool("wifiEnabled", wifiEnabled);
   fdcPrefs.putString("wifiSSID", wifiSSID);
   fdcPrefs.putString("wifiPass", wifiPass);
+  fdcPrefs.putString("wifiName", wifiName);
 
   for (int d = 0; d < MAX_DRIVE; d++) {
     sprintf(key, "Drive%d", d);
@@ -583,6 +596,7 @@ void wifiCallback(cmd* c) {
     cliConsole->printf("WiFi PASS: %s\r\n\n", (strlen(wifiPass)) ? "******" : "Not Set");
     cliConsole->printf("WiFi Status: %s\r\n", (WiFi.status() == WL_CONNECTED) ? "Connected" : "Not Connected");
     cliConsole->printf("WiFi IP Address: %s\r\n", WiFi.localIP().toString().c_str());
+    cliConsole->printf("WiFi Hostname: %s\r\n", wifiName);
     return;
   }
 
@@ -626,7 +640,28 @@ void ssidCallback(cmd* c) {
     strncpy(wifiSSID, ssid.c_str(), sizeof(wifiSSID));
     confChanged = true;
 
-    wifiDisconnected();
+    wifiDisconnected();  // WiFi should auto reconnect if enabled
+  }
+}
+
+// Callback function for hostname command
+void hostnameCallback(cmd* c) {
+  Command cmd(c);  // Create wrapper object
+
+  int argNum = cmd.countArgs();  // Get number of arguments
+
+  if (!argNum) {
+    cliConsole->printf("hostname name\r\n");
+    return;
+  }
+
+  Argument cmdArg = cmd.getArg(0);
+  String hostname = cmdArg.getValue();
+
+  if (strcmp(wifiName, hostname.c_str())) {
+    strncpy(wifiName, hostname.c_str(), sizeof(wifiName));
+    confChanged = true;
+
     wifiSetup();
   }
 }

@@ -24,7 +24,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  15
+#define MINORVER  16
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -32,12 +32,14 @@ ESPTelnetStream telnet;
 Preferences fdcPrefs;
 
 #define DEFAULT_BAUD  403200;
+#define DEFAULT_NAME  "ESP32-FDC-SDS"
 
 int baudRate = DEFAULT_BAUD;
 
 bool wifiEnabled = false;
 char wifiSSID[80];
 char wifiPass[80];
+char wifiName[40];
 
 /*
 ** FDC+ Command / Response Block
@@ -107,6 +109,7 @@ Command cmdDump;
 Command cmdWifi;
 Command cmdSSID;
 Command cmdPass;
+Command cmdName;
 Command cmdReboot;
 Command cmdUpdate;
 Command cmdVersion;
@@ -118,6 +121,7 @@ Command cmdRename;
 Command cmdClear;
 Command cmdCopy;
 Command cmdLoopback;
+Command cmdTime;
 
 bool confChanged = false;
 bool sdReady = false;
@@ -175,7 +179,14 @@ void loadPrefs() {
     fdcPrefs.getString("wifiPass", wifiPass, sizeof(wifiPass));
   }
 
-
+  wifiName[0] = 0;
+  if (fdcPrefs.isKey("wifiName")) {
+    fdcPrefs.getString("wifiName", wifiName, sizeof(wifiName));
+  }
+  else {
+    strcpy(wifiName, DEFAULT_NAME);
+    Serial.printf("Setting default WiFi hostname to '%s'\r\n", wifiName);
+  }
 
   confChanged = false;
 }
