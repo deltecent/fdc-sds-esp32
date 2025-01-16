@@ -46,7 +46,7 @@ bool mountDrive(int driveno, const char *filename) {
     drive[driveno].size = drive[driveno].diskImg.size();
     strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
 
-    cliConsole->printf("Drive %d: mounted as '%s's.\r\n", driveno, filename+1);
+    cliConsole->printf("Drive %d: mounted as '%s'.\r\n", driveno, filename+1);
 
     lastDrive = -1;
     lastTrack = -1;

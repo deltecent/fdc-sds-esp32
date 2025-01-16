@@ -544,12 +544,6 @@ void dumpCallback(cmd* c) {
 
 // Callback function for stats command
 void statsCallback(cmd* c) {
-  Command cmd(c);  // Create wrapper object
-
-  int argNum = cmd.countArgs();  // Get number of arguments
-
-  cliConsole->printf("FDC+ Connection Status: %s\r\n\n", (fdcTimeout) ? "Not Connected" : "Connected");
-
   cliConsole->printf("FDC+ Baud Rate: %d (%d)\r\n\n", baudRate, fdcSerial.baudRate());
 
   cliConsole->printf("STAT: %08d\r\n", statCnt);
