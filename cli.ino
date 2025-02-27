@@ -477,7 +477,7 @@ void mountCallback(cmd* c) {
   }
   Argument filenameArg = cmd.getArg(1);
   String filename = "/" + filenameArg.getValue();
-  mountDrive(d, filename.c_str());
+  confChanged |= mountDrive(d, filename.c_str());
 }
 
 // Callback function for unmount command
@@ -501,7 +501,7 @@ void unmountCallback(cmd* c) {
     return;
   }
 
-  unmountDrive(d);
+  confChanged |= unmountDrive(d);
 }
 
 // Callback function for save command
@@ -577,7 +577,7 @@ void clearCallback(cmd* c) {
   statsCallback(c);
 }
 
-// Callback function for stats command
+// Callback function for wifi command
 void wifiCallback(cmd* c) {
   Command cmd(c);  // Create wrapper object
   bool prevWifi = wifiEnabled;

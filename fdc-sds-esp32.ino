@@ -24,7 +24,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  17
+#define MINORVER  18
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;

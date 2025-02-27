@@ -34,33 +34,32 @@ bool mountDrive(int driveno, const char *filename) {
     unmountDrive(driveno);
   }
 
-  if (SD.exists(filename)) {
-    drive[driveno].diskImg=SD.open(filename, "r+");
-
-    if (!drive[driveno].diskImg) {
-      cliConsole->printf("Drive %d: could not open '%s'\r\n", driveno, filename);
-      return false;
-    }
-
-    drive[driveno].mounted = true;
-    drive[driveno].size = drive[driveno].diskImg.size();
-    strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
-
-    cliConsole->printf("Drive %d: mounted as '%s'.\r\n", driveno, filename+1);
-
-    lastDrive = -1;
-    lastTrack = -1;
-
-    confChanged = true;
-  }
-  else {
+  if (!(SD.exists(filename))) {
     cliConsole->printf("File '%s' does not exist\r\n", filename);
+    
+    return false;
   }
+
+  drive[driveno].diskImg=SD.open(filename, "r+");
+
+  if (!drive[driveno].diskImg) {
+    cliConsole->printf("Drive %d: could not open '%s'\r\n", driveno, filename);
+    return false;
+  }
+
+  drive[driveno].mounted = true;
+  drive[driveno].size = drive[driveno].diskImg.size();
+  strncpy(drive[driveno].filename, filename, sizeof(drive[driveno].filename));
+
+  cliConsole->printf("Drive %d: mounted as '%s'.\r\n", driveno, filename+1);
+
+  lastDrive = -1;
+  lastTrack = -1;
 
   return true;
 }
 
-void unmountDrive(int driveno) {
+bool unmountDrive(int driveno) {
   if (driveno >= 0 && driveno < MAX_DRIVE) {
     if (drive[driveno].mounted || drive[driveno].diskImg) {
       drive[driveno].diskImg.close();
@@ -71,9 +70,11 @@ void unmountDrive(int driveno) {
       lastDrive = -1;
       lastTrack = -1;
 
-      confChanged = true;
+      return true;
     }
   }
+
+  return false;
 }
 
 void listDir(fs::SDFS &fs, const char * dirname, uint8_t levels){
@@ -102,6 +103,7 @@ void listDir(fs::SDFS &fs, const char * dirname, uint8_t levels){
   while(file) {
     f = file.name();
     if (*f != '.') {
+      time_t modTime = file.getLastWrite();
       cliConsole->printf("%-32.32s %8d\r\n", f, file.size());
     }
     file.close();
