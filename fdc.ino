@@ -159,6 +159,12 @@ void fdcBaudrate() {
 //  }
 }
 
+void clearDSel(void) {
+  for (int d=0; d<MAX_DRIVE; d++) {
+    digitalWrite(dSelLED[d], LOW);
+  }
+}
+
 bool fdcProc(void) {
   crblk_t cmd;
 
@@ -256,7 +262,7 @@ bool procREAD(crblk_t *cmd) {
     int bytesRead = drive[d].diskImg.read(trackBuf, len);
 
     if (bytesRead != len) {
-      cliConsole->printf("Drive %d: Could not read %d bytes\r\n", d, len);
+      cliConsole->printf("Drive %d: Could not read %d bytes from track %d\r\n", d, len, track);
       return false;
     }
 
@@ -265,12 +271,12 @@ bool procREAD(crblk_t *cmd) {
     lastLen = len;
   }
 
-  // CP/M and FLEX for Serial Drives does not send
-  // STAT commands. If we have not received any STAT
-  // commands, turn on head load during READ
-  //if (!fdcTimeout) {
-    digitalWrite(dSelLED[d], HIGH);
-  //}
+  // CP/M and FLEX for Serial Drives do not send
+  // STAT commands. Clear all drive status LEDs
+  // and set drive being accessed in case we didn't
+  // get a STAT command.
+  clearDSel();
+  digitalWrite(dSelLED[d], HIGH);
 
   bool r = sendBlock(trackBuf, len, false, 7000);
 
@@ -316,12 +322,12 @@ bool procWRIT(crblk_t *cmd) {
     return false;
   }
 
-  // CP/M and FLEX for Serial Drives does not send
-  // STAT commands. If we have not received any STAT
-  // commands, turn on head load during WRIT
-  //if (!fdcTimeout) {
-    digitalWrite(dSelLED[d], HIGH);
-  //}
+  // CP/M and FLEX for Serial Drives do not send
+  // STAT commands. Clear all drive status LEDs
+  // and set drive being accessed in case we didn't
+  // get a STAT command.
+  clearDSel();
+  digitalWrite(dSelLED[d], HIGH);
 
   // Let FDC+ know we're ready to receive the track
   cmd->word1[LSB] = RESP_OK;

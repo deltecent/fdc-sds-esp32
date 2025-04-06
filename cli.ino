@@ -31,6 +31,11 @@ void cliSetup(Stream* defaultConsole) {
   cmdLoopback = cli.addCommand("loopback,lb", loopbackCallback);
   cmdTime = cli.addCommand("time,date", timeCallback);
   
+  if (SD.exists("/autoexec.bat")) {
+    cliConsole->printf("\r\nExecuting AUTOEXEC.BAT\r\n");
+    cli.parse("exec autoexec.bat");
+  }
+
   dispPrompt();
 }
 
@@ -131,7 +136,7 @@ void helpCallback(cmd* c) {
   cliConsole->printf("TIME                      Display time\r\n");
   cliConsole->printf("TYPE filename             Display file\r\n");
   cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
-  cliConsole->printf("UPDATE                    Update firmware\r\n");
+  cliConsole->printf("UPDATE                    Update firmware (update.bin)\r\n");
   cliConsole->printf("VERSION                   Dispay version\r\n");
   cliConsole->printf("WIPE                      Wipe NVRAM configuration\r\n");
   cliConsole->printf("WIFI [ON | OFF]           Turn WiFi On and Off\r\n");
