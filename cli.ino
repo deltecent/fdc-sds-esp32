@@ -616,7 +616,7 @@ void wifiCallback(cmd* c) {
     wifiSetup();
     confChanged = true;
   } else if (!wifiEnabled && prevWifi) {
-    wifiDisconnected();
+    WiFi.disconnect(true);
     confChanged = true;
   }
 }

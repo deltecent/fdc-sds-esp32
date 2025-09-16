@@ -7,7 +7,14 @@ void wifiSetup() {
   }
 
   if (!strlen(wifiSSID)) {
-    Serial.printf("WiFi SSID not set.\r\n");
+    cliConsole->printf("WiFi SSID not set.\r\n");
+    wifiEnabled = false;
+    return;
+  }
+
+  if (!strlen(wifiPass)) {
+    cliConsole->printf("WiFi PASSWORD not set.\r\n");
+    wifiEnabled = false;
     return;
   }
   
@@ -15,11 +22,23 @@ void wifiSetup() {
   WiFi.setHostname(wifiName);
   WiFi.mode(WIFI_STA);
 
+  WiFi.removeEvent(wifiEvent);
   WiFi.onEvent(wifiEvent);
 
-  WiFi.begin(wifiSSID, wifiPass);
+  // Add Wi-Fi network with SSID and Password
+  wifiMulti.APlistClean();
+  wifiMulti.addAP(wifiSSID, wifiPass);
 
-  Serial.printf("WiFi connecting to '%s'\r\n", wifiSSID);
+  cliConsole->printf("WiFi connecting to '%s'\r\n", wifiSSID);
+
+  int tries = 5;
+
+  while (wifiMulti.run() != WL_CONNECTED && tries--) {
+    delay(500);
+  }
+  //WiFi.begin(wifiSSID, wifiPass);
+
+  //cliConsole->printf("WiFi connecting to '%s'\r\n", wifiSSID);
 }
 
 void wifiConnected() {
@@ -29,7 +48,7 @@ void wifiConnected() {
     telnet.onDisconnect(telnetDisconnected);
   }
   else {
-    Serial.printf("Could not start telnet server\r\n");
+    cliConsole->printf("Could not start telnet server\r\n");
   }
 
   // Start FTP server
@@ -76,16 +95,12 @@ void wifiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("Disconnected from WiFi access point");
       wifiDisconnected();
-      if (wifiEnabled) {
-        Serial.println("Attempting to reconnect");
-        wifiSetup();
-      }
       break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       cliConsole->print("Obtained IP address: ");
       cliConsole->println(WiFi.localIP());
-      setClock();
+      // setClock();
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:          Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;

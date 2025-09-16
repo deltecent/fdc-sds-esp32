@@ -3,3 +3,4 @@ mount 1 "Games on 300-5-F.dsk"
 umount 2
 umount 3
 
+type basic5.txt

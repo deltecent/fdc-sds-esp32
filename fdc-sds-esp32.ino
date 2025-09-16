@@ -13,6 +13,7 @@
 #include <FS.h>
 #include <SD.h>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <Update.h>
 #include <ESPTelnetStream.h>
 #include <SimpleCLI.h>
@@ -24,7 +25,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  21
+#define MINORVER  23
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -32,14 +33,16 @@ ESPTelnetStream telnet;
 Preferences fdcPrefs;
 
 #define DEFAULT_BAUD  403200;
-#define DEFAULT_NAME  "ESP32-FDC-SDS"
+#define DEFAULT_NAME  "FDC-SDS-EPS32"
 
 int baudRate = DEFAULT_BAUD;
 
+WiFiMulti wifiMulti;
+
 bool wifiEnabled = false;
-char wifiSSID[80];
-char wifiPass[80];
-char wifiName[40];
+char wifiSSID[80] = {0};
+char wifiPass[80] = {0};
+char wifiName[40] = {0};
 
 /*
 ** FDC+ Command / Response Block
@@ -164,6 +167,7 @@ void loadPrefs() {
     Serial.printf("Setting FDC+ default baud rate to %d\r\n", baudRate);
   }
 
+  wifiEnabled = false;
   if (fdcPrefs.isKey("wifiEnabled")) {
     wifiEnabled = fdcPrefs.getBool("wifiEnabled");
   }
@@ -241,8 +245,6 @@ void setup() {
 
   loadPrefs();
 
-  wifiSetup();
-
   diskSetup();
   
   timerSetup();
@@ -250,6 +252,8 @@ void setup() {
   fdcSetup();
 
   cliSetup(&Serial);
+
+  wifiSetup();
 }
 
 void loop() {
