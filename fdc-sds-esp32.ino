@@ -25,7 +25,7 @@
 #endif
 
 #define MAJORVER  0
-#define MINORVER  23
+#define MINORVER  24
 
 HardwareSerial fdcSerial(2);
 ESPTelnetStream telnet;
@@ -33,7 +33,7 @@ ESPTelnetStream telnet;
 Preferences fdcPrefs;
 
 #define DEFAULT_BAUD  403200;
-#define DEFAULT_NAME  "FDC-SDS-EPS32"
+#define DEFAULT_NAME  "FDC-SDS-ESP32"
 
 int baudRate = DEFAULT_BAUD;
 
