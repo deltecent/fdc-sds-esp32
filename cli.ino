@@ -1,7 +1,7 @@
 void cliSetup(Stream* defaultConsole) {
   cliConsole = defaultConsole;
 
-  strcpy(cliPrompt, "ESP32 FDC+>");
+  strcpy(cliPrompt, ">");
 
   cli.setOnError(errorCallback);  // Set error Callback
 
@@ -43,6 +43,7 @@ void dispPrompt() {
   if (confChanged) {
     cliConsole->print("* ");
   }
+  cliConsole->print(wifiName);
   cliConsole->print(cliPrompt);
 }
 
@@ -121,12 +122,13 @@ void helpCallback(cmd* c) {
   cliConsole->printf("DIR                       Directory\r\n");
   cliConsole->printf("DUMP                      Dump track buffer\r\n");
   cliConsole->printf("EXEC filename             Execute filename\r\n");
-  cliConsole->printf("HOSTNAME name             Set Wifi hostname\r\n");
+  cliConsole->printf("HOSTNAME name             Set Wifi device name\r\n");
   if (cliConsole == &telnet) {
     cliConsole->printf("LOGOUT                    Logout\r\n");
   }
   cliConsole->printf("LOOPBACK                  FDC+ loopback test\r\n");
-  cliConsole->printf("MOUNT [drive filename]    Mount drive\r\n");
+  cliConsole->printf("MOUNT                     Display mounted drives\r\n");
+  cliConsole->printf("MOUNT [drive filename]    Mount drive [0-3]\r\n");
   cliConsole->printf("PASS pass                 Set WiFi password\r\n");
   cliConsole->printf("REBOOT                    Reboot device\r\n");
   cliConsole->printf("RENAME old new            Rename file\r\n");
@@ -135,11 +137,12 @@ void helpCallback(cmd* c) {
   cliConsole->printf("STATS                     FDC+ Statistics\r\n");
   cliConsole->printf("TIME                      Display time\r\n");
   cliConsole->printf("TYPE filename             Display file\r\n");
-  cliConsole->printf("UNMOUNT drive             Unmount drive\r\n");
+  cliConsole->printf("UNMOUNT drive             Unmount drive [0-3]\r\n");
   cliConsole->printf("UPDATE                    Update firmware (update.bin)\r\n");
-  cliConsole->printf("VERSION                   Dispay version\r\n");
+  cliConsole->printf("VERSION                   Dispay firmware version\r\n");
   cliConsole->printf("WIPE                      Wipe NVRAM configuration\r\n");
-  cliConsole->printf("WIFI [ON | OFF]           Turn WiFi On and Off\r\n");
+  cliConsole->printf("WIFI                      Display WiFi status\r\n");
+  cliConsole->printf("WIFI [ON | OFF]           Turn WiFi ON or OFF\r\n");
 }
 
 void versionCallback(cmd* c) {
